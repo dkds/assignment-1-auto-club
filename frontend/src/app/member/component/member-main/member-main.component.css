@@ -1,0 +1,12 @@
+button.btn.btn-outline-secondary.calendar {
+    padding-bottom: 4px;
+    padding-top: 2px;
+    border-color: lightgrey;
+}
+.member-info-controls {
+    float: right;
+    position: absolute;
+    bottom: 0;
+    right: 15px;
+    clear: right;
+}

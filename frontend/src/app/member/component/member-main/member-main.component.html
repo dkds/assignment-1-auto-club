@@ -1,0 +1,73 @@
+<div class="col-12">
+
+  <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
+
+  <div class="row">
+    <div class="col-lg-4 col-md-6 col-sm-8">
+
+      <div class="row">
+        <div class="col-12 mb-4">
+          <h5>
+            Members
+            <div class="float-right btn-group">
+              <button class="btn btn-sm btn-dark" (click)="memberImportFormContainer.toggle()"
+                [attr.aria-expanded]="!memberImportFormContainer.collapsed"
+                aria-controls="memberImportFormContainer">Import</button>
+              <button class="btn btn-sm btn-dark" (click)="memberFormContainer.toggle()"
+                [attr.aria-expanded]="!memberFormContainer.collapsed"
+                aria-controls="memberFormContainer">{{memberFormMode}}</button>
+            </div>
+          </h5>
+
+          <member-import-form #memberImportFormContainer></member-import-form>
+          <member-form #memberFormContainer (formShown)="onFormShown()" (formHidden)="onFormHidden()"></member-form>
+
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 mb-4">
+          <select class="form-control" id="sortMode" (change)="onSortModeChange($event)">
+            <option *ngFor="let sortMode of sortModes" [value]="sortMode.name">{{sortMode.text}}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row item-container">
+        <div class="col-12">
+          <ul class="list-group">
+            <li *ngFor="let member of memberList" class="list-group-item list-group-item-action" aria-current="true">
+              <div class="row">
+                <div class="col-8">
+                  <div class="d-flex w-100 justify-content-between">
+                    <h6 class="mb-1">{{member.firstName + " " + member.lastName}}</h6>
+                  </div>
+                  <div class="float-left pl-1 pt-2">
+                    <p class="mb-1">Email: {{member.email}}</p>
+                    <p class="mb-1">Car: {{member?.carModel?.carMake?.name + " " + member.carModel?.name}}</p>
+                    <p class="mb-1">VIN: {{member?.vin}}</p>
+                    <p class="mb-1">MFD: {{member?.mfd | date: 'YYYY-MM-dd'}}</p>
+                  </div>
+                </div>
+                <div class="col-4">
+                  <div class="member-info-controls">
+                    <div class="btn-group" role="group">
+                      <button type="button" class="btn btn-sm btn-secondary" [disabled]="listProcessing"
+                        (click)="onItemEditClick($event, member)">Edit</button>
+                      <button type="button" class="btn btn-sm btn-secondary" [disabled]="listProcessing"
+                        (click)="onItemDeleteClick($event, member)">Delete</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <ngb-pagination class="d-flex justify-content-end pr-4 pt-3" [collectionSize]="totalMemberSize"
+        [pageSize]="pageSize" [(page)]="page" (pageChange)="onPageChange($event)"></ngb-pagination>
+
+    </div>
+  </div>
+</div>

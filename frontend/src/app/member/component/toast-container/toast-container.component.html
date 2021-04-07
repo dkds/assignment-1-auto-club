@@ -1,0 +1,17 @@
+<ngb-toast *ngFor="let toast of toastService.toasts" [class]="toast.classname" [autohide]="toast.autohide || false"
+    [delay]="toast.autohideDelay || 2000" (hidden)="toastService.remove(toast)" [header]="toast.header">
+
+    <div *ngIf="toast.progressBar" style="min-width: 200px;">
+        <ngb-progressbar [type]="toast.progressBar.type" [value]="toast.progressBar.value"
+            [striped]="toast.progressBar.striped" [animated]="toast.progressBar.animated"></ngb-progressbar>
+        <div class="pt-2">
+            {{toast.progressBar.text}}
+        </div>
+    </div>
+
+    <ng-template [ngIf]="toast.template">
+        <ng-template [ngTemplateOutlet]="toast.template"></ng-template>
+    </ng-template>
+
+    <ng-template [ngIf]="toast.text">{{ toast.text }}</ng-template>
+</ngb-toast>

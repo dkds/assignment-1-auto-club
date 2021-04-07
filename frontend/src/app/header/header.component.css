@@ -1,0 +1,7 @@
+.navbar-light .navbar-brand {
+    font-weight: bold;    
+    font-size: 2rem;
+}
+.active > a.nav-link {
+    font-weight: bold;
+}

@@ -1,0 +1,75 @@
+<div #memberFormContainer="ngbCollapse" [(ngbCollapse)]="collapsed" (shown)="onFormShown()" (hidden)="onFormHidden()"
+  class="collapse mt-3" id="memberFormContainer">
+  <div class="card card-body">
+    <form [formGroup]="memberForm" (ngSubmit)="onMemberFormSubmit()">
+      <input type="hidden" id="memberId" formControlName="id">
+      <div class="form-group">
+        <label for="memberFirstName">First Name</label>
+        <input type="text" class="form-control" id="memberFirstName" formControlName="firstName"
+          [class.is-invalid]="formSubmitted && form.firstName.errors">
+        <div *ngIf="formSubmitted && form.firstName.errors" class="invalid-feedback">
+          <div *ngIf="form.firstName.errors.required">First name is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="memberLastName">Last Name</label>
+        <input type="text" class="form-control" id="memberLastName" formControlName="lastName"
+          [class.is-invalid]="formSubmitted && form.lastName.errors">
+        <div *ngIf="formSubmitted && form.lastName.errors" class="invalid-feedback">
+          <div *ngIf="form.lastName.errors.required">Last name is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="memberEmail">Email</label>
+        <input type="text" class="form-control" id="memberEmail" formControlName="email"
+          [class.is-invalid]="formSubmitted && form.email.errors">
+        <div *ngIf="formSubmitted && form.email.errors" class="invalid-feedback">
+          <div *ngIf="form.email.errors.required">Email is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="memberCarModel">Car Model</label>
+        <select class="form-control" id="memberCarModel" formControlName="carModelId"
+          [class.is-invalid]="formSubmitted && form.carModelId.errors">
+          <option value="" disabled selected>Choose Car Model</option>
+          <option *ngFor="let carModel of carModelList" [ngValue]="carModel.id">{{carModel.name}}</option>
+        </select>
+        <div *ngIf="formSubmitted && form.carModelId.errors" class="invalid-feedback">
+          <div *ngIf="form.carModelId.errors.required">Car model is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="memberCarVINNumber">VIN Number</label>
+        <input type="text" class="form-control" id="memberCarVINNumber" formControlName="vinNumber"
+          [class.is-invalid]="formSubmitted && form.vinNumber.errors">
+        <div *ngIf="formSubmitted && form.vinNumber.errors" class="invalid-feedback">
+          <div *ngIf="form.vinNumber.errors.required">VIN number is required</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="memberCarMFD">Manufacture Date</label>
+        <div class="input-group">
+          <input class="form-control" id="memberCarMFD" placeholder="yyyy-mm-dd" ngbDatepicker #d="ngbDatepicker"
+            formControlName="mfd" [class.is-invalid]="formSubmitted && form.mfd.errors">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary calendar" (click)="d.toggle()" type="button">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-calendar3"
+                viewBox="0 0 16 16">
+                <path
+                  d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z">
+                </path>
+                <path
+                  d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2z">
+                </path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div *ngIf="formSubmitted && form.mfd.errors" class="invalid-feedback">
+          <div *ngIf="form.mfd.errors.required">Manufacture date is required</div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="formSubmitting">Save</button>
+    </form>
+  </div>
+</div>

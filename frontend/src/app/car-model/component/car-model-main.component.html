@@ -1,0 +1,71 @@
+<div class="col-12">
+  <div class="row">
+    <div class="col-lg-4 col-md-6 col-sm-8">
+      <div class="row">
+        <div class="col-12 mb-4">
+          <h5>
+            Car Models
+            <div class="float-right">
+              <button class="btn btn-sm btn-dark" (click)="carModelFormContainer.toggle()"
+                [attr.aria-expanded]="!carModelFormCollapsed"
+                aria-controls="carModelFormContainer">{{formMode}}</button>
+            </div>
+          </h5>
+          <div #carModelFormContainer="ngbCollapse" [(ngbCollapse)]="carModelFormCollapsed" (shown)="onFormShown()"
+            (hidden)="onFormHidden()" class="collapse mt-3" id="carModelFormContainer">
+            <div class="card card-body">
+              <form [formGroup]="carModelForm" (ngSubmit)="onCarModelFormSubmit()">
+                <input type="hidden" id="carModelId" formControlName="id">
+                <div class="form-group">
+                  <label for="carModelName">Name</label>
+                  <input type="text" class="form-control" id="carModelName" formControlName="name"
+                    [class.is-invalid]="carModelFormSubmitted && form.name.errors">
+                  <div *ngIf="carModelFormSubmitted && form.name.errors" class="invalid-feedback">
+                    <div *ngIf="form.name.errors.required">Name is required</div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="carModelName">Car Make</label>
+                  <select class="form-control" id="carModelName" formControlName="carMakeId"
+                    [class.is-invalid]="carModelFormSubmitted && form.carMakeId.errors">
+                    <option value="" disabled selected>Choose Car Make</option>
+                    <option *ngFor="let carMake of carMakeList" [ngValue]="carMake.id">{{carMake.name}}</option>
+                  </select>
+                  <div *ngIf="carModelFormSubmitted && form.carMakeId.errors" class="invalid-feedback">
+                    <div *ngIf="form.carMakeId.errors.required">Car Make is required</div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary" [disabled]="carModelFormSubmitting">Save</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row item-container">
+        <div class="col-12">
+          <ul class="list-group">
+            <li *ngFor="let carModel of carModelList" class="list-group-item list-group-item-action"
+              aria-current="true">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{carModel.name}}</h6>
+              </div>
+              <div>
+                <div class="float-left">
+                  <p class="mb-1">{{carModel.carMake?.name}}</p>
+                </div>
+                <div class="float-right">
+                  <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="carModelFormSubmitting"
+                      (click)="onItemEditClick($event, carModel)">Edit</button>
+                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="carModelFormSubmitting"
+                      (click)="onItemDeleteClick($event, carModel)">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

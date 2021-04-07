@@ -1,0 +1,53 @@
+<div class="col-12">
+  <div class="row">
+    <div class="col-lg-4 col-md-6 col-sm-8">
+      <div class="row">
+        <div class="col-12 mb-4">
+          <h5>
+            Car Makes
+            <div class="float-right">
+              <button class="btn btn-sm btn-dark" (click)="carMakeFormContainer.toggle()"
+                [attr.aria-expanded]="!carMakeFormCollapsed" aria-controls="carMakeFormContainer">{{formMode}}</button>
+            </div>
+          </h5>
+          <div #carMakeFormContainer="ngbCollapse" [(ngbCollapse)]="carMakeFormCollapsed" (shown)="onFormShown()"
+            (hidden)="onFormHidden()" class="collapse mt-3" id="carMakeFormContainer">
+            <div class="card card-body">
+              <form [formGroup]="carMakeForm" (ngSubmit)="onCarMakeFormSubmit()">
+                <input type="hidden" id="carMakeId" formControlName="id">
+                <div class="form-group">
+                  <label for="carMakeName">Name</label>
+                  <input type="text" class="form-control" id="carMakeName" formControlName="name"
+                    [class.is-invalid]="carMakeFormSubmitted && form.name.errors">
+                  <div *ngIf="carMakeFormSubmitted && form.name.errors" class="invalid-feedback">
+                    <div *ngIf="form.name.errors.required">Name is required</div>
+                  </div>
+                </div>
+                <button type="submit" class="btn btn-primary" [disabled]="carMakeFormSubmitting">Save</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row item-container">
+        <div class="col-12">
+          <ul class="list-group">
+            <li *ngFor="let carMake of carMakeList" class="list-group-item list-group-item-action" aria-current="true">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1">{{carMake.name}}</h6>
+                <div class="float-right">
+                  <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="carMakeFormSubmitting"
+                      (click)="onItemEditClick($event, carMake)">Edit</button>
+                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="carMakeFormSubmitting"
+                      (click)="onItemDeleteClick($event, carMake)">Delete</button>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
