@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import io from 'socket.io-client';
-import { fromEvent, Observable, Subject } from 'rxjs';
+import { fromEvent, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Injectable({
@@ -11,8 +11,8 @@ export class JobStatusService {
   constructor() {
   }
 
-  connect(jobId: string): Observable<any> {
-    const socket = io("http://localhost:3000/job-status", { transports: ['websocket'], timeout: 60000 });
+  connect(jobId: string, type: string): Observable<any> {
+    const socket = io(`http://localhost:3000/job-status/${type}`, { transports: ['websocket'], timeout: 60000 });
 
     socket.once('connect', () => {
       console.log('progress-listener connected', jobId);

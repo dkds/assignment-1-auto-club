@@ -1,0 +1,26 @@
+
+type Query {
+  carMakes: CarMakePage
+  carMake(id: ID): CarMakeView
+}
+
+type Mutation {
+  createCarMake(carMakeInput: CarMakeInput): CarMakeView
+  updateCarMake(carMakeInput: CarMakeInput): CarMakeView
+  deleteCarMake(id: ID): Int
+}
+
+type CarMakePage  {
+    totalCount: Int
+    nodes: [CarMakeView]
+}
+
+type CarMakeView  {
+    id: Int!
+    name: String!
+}
+
+input CarMakeInput  {
+    id: Int
+    name: String!
+}

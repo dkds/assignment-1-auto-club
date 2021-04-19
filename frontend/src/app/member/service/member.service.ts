@@ -11,7 +11,7 @@ import { Member } from '../model/member.model';
 
 const LIST_MEMBERS = gql`
   query ($first: Int!, $offset: Int!, $orderBy: MembersOrderBy!) {
-    allMembers(first: $first, offset: $offset, orderBy: [$orderBy]) {
+    members(first: $first, offset: $offset, orderBy: [$orderBy]) {
       totalCount
       nodes {
         id
@@ -19,8 +19,9 @@ const LIST_MEMBERS = gql`
         lastName
         email
         vin
-        carModelId
-        manufacturedDate
+        mfd
+        carModel
+        carMake
       }
     }
   }`;
@@ -195,7 +196,7 @@ export class MemberService {
     }));
   }
 
-  uploadFile(formData: FormData): Observable<any> {
-    return this.httpClient.post('http://localhost:3000/upload', formData)
+  importFile(formData: FormData): Observable<any> {
+    return this.httpClient.post('http://localhost:3000/import', formData)
   }
 }

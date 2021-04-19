@@ -1,0 +1,1064 @@
+"""The root query type which gives access points into the data universe."""
+type Query implements Node {
+  """
+  Exposes the root query type nested one level down. This is helpful for Relay 1
+  which can only query top level fields if they are in a particular form.
+  """
+  query: Query!
+
+  """
+  The root query type must be a `Node` to work well with Relay 1 mutations. This just resolves to `query`.
+  """
+  nodeId: ID!
+
+  """Fetches an object given its globally unique `ID`."""
+  node(
+    """The globally unique `ID`."""
+    nodeId: ID!
+  ): Node
+
+  """Reads and enables pagination through a set of `CarMake`."""
+  allCarMakes(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `CarMake`."""
+    orderBy: [CarMakesOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CarMakeCondition
+  ): CarMakesConnection
+
+  """Reads and enables pagination through a set of `CarModel`."""
+  allCarModels(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `CarModel`."""
+    orderBy: [CarModelsOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CarModelCondition
+  ): CarModelsConnection
+
+  """Reads and enables pagination through a set of `Member`."""
+  allMembers(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Member`."""
+    orderBy: [MembersOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MemberCondition
+  ): MembersConnection
+  carMakeById(id: Int!): CarMake
+  carModelById(id: Int!): CarModel
+  memberById(id: Int!): Member
+
+  """Reads a single `CarMake` using its globally unique `ID`."""
+  carMake(
+    """The globally unique `ID` to be used in selecting a single `CarMake`."""
+    nodeId: ID!
+  ): CarMake
+
+  """Reads a single `CarModel` using its globally unique `ID`."""
+  carModel(
+    """The globally unique `ID` to be used in selecting a single `CarModel`."""
+    nodeId: ID!
+  ): CarModel
+
+  """Reads a single `Member` using its globally unique `ID`."""
+  member(
+    """The globally unique `ID` to be used in selecting a single `Member`."""
+    nodeId: ID!
+  ): Member
+}
+
+"""An object with a globally unique `ID`."""
+interface Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+}
+
+"""A connection to a list of `CarMake` values."""
+type CarMakesConnection {
+  """A list of `CarMake` objects."""
+  nodes: [CarMake]!
+
+  """
+  A list of edges which contains the `CarMake` and cursor to aid in pagination.
+  """
+  edges: [CarMakesEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `CarMake` you could get from the connection."""
+  totalCount: Int!
+}
+
+type CarMake implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: Int!
+  name: String!
+
+  """Reads and enables pagination through a set of `CarModel`."""
+  carModelsByCarMakeId(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `CarModel`."""
+    orderBy: [CarModelsOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: CarModelCondition
+  ): CarModelsConnection!
+}
+
+"""A connection to a list of `CarModel` values."""
+type CarModelsConnection {
+  """A list of `CarModel` objects."""
+  nodes: [CarModel]!
+
+  """
+  A list of edges which contains the `CarModel` and cursor to aid in pagination.
+  """
+  edges: [CarModelsEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `CarModel` you could get from the connection."""
+  totalCount: Int!
+}
+
+type CarModel implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: Int!
+  name: String!
+  carMakeId: Int!
+
+  """Reads a single `CarMake` that is related to this `CarModel`."""
+  carMakeByCarMakeId: CarMake
+
+  """Reads and enables pagination through a set of `Member`."""
+  membersByCarModelId(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """Only read the last `n` values of the set."""
+    last: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """Read all values in the set before (above) this cursor."""
+    before: Cursor
+
+    """Read all values in the set after (below) this cursor."""
+    after: Cursor
+
+    """The method to use when ordering `Member`."""
+    orderBy: [MembersOrderBy!] = [PRIMARY_KEY_ASC]
+
+    """
+    A condition to be used in determining which values should be returned by the collection.
+    """
+    condition: MemberCondition
+  ): MembersConnection!
+}
+
+"""A connection to a list of `Member` values."""
+type MembersConnection {
+  """A list of `Member` objects."""
+  nodes: [Member]!
+
+  """
+  A list of edges which contains the `Member` and cursor to aid in pagination.
+  """
+  edges: [MembersEdge!]!
+
+  """Information to aid in pagination."""
+  pageInfo: PageInfo!
+
+  """The count of *all* `Member` you could get from the connection."""
+  totalCount: Int!
+}
+
+type Member implements Node {
+  """
+  A globally unique identifier. Can be used in various places throughout the system to identify this single value.
+  """
+  nodeId: ID!
+  id: Int!
+  firstName: String!
+  lastName: String!
+  email: String!
+  carModelId: Int!
+  vin: String!
+  manufacturedDate: Datetime!
+  ageOfVehicle: Int!
+  createdAt: Datetime!
+
+  """Reads a single `CarModel` that is related to this `Member`."""
+  carModelByCarModelId: CarModel
+}
+
+"""
+A point in time as described by the [ISO
+8601](https://en.wikipedia.org/wiki/ISO_8601) standard. May or may not include a timezone.
+"""
+scalar Datetime
+
+"""A `Member` edge in the connection."""
+type MembersEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `Member` at the end of the edge."""
+  node: Member
+}
+
+"""A location in a connection that can be used for resuming pagination."""
+scalar Cursor
+
+"""Information about pagination in a connection."""
+type PageInfo {
+  """When paginating forwards, are there more items?"""
+  hasNextPage: Boolean!
+
+  """When paginating backwards, are there more items?"""
+  hasPreviousPage: Boolean!
+
+  """When paginating backwards, the cursor to continue."""
+  startCursor: Cursor
+
+  """When paginating forwards, the cursor to continue."""
+  endCursor: Cursor
+}
+
+"""Methods to use when ordering `Member`."""
+enum MembersOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  FIRST_NAME_ASC
+  FIRST_NAME_DESC
+  LAST_NAME_ASC
+  LAST_NAME_DESC
+  EMAIL_ASC
+  EMAIL_DESC
+  CAR_MODEL_ID_ASC
+  CAR_MODEL_ID_DESC
+  VIN_ASC
+  VIN_DESC
+  MANUFACTURED_DATE_ASC
+  MANUFACTURED_DATE_DESC
+  AGE_OF_VEHICLE_ASC
+  AGE_OF_VEHICLE_DESC
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `Member` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input MemberCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: Int
+
+  """Checks for equality with the object’s `firstName` field."""
+  firstName: String
+
+  """Checks for equality with the object’s `lastName` field."""
+  lastName: String
+
+  """Checks for equality with the object’s `email` field."""
+  email: String
+
+  """Checks for equality with the object’s `carModelId` field."""
+  carModelId: Int
+
+  """Checks for equality with the object’s `vin` field."""
+  vin: String
+
+  """Checks for equality with the object’s `manufacturedDate` field."""
+  manufacturedDate: Datetime
+
+  """Checks for equality with the object’s `ageOfVehicle` field."""
+  ageOfVehicle: Int
+
+  """Checks for equality with the object’s `createdAt` field."""
+  createdAt: Datetime
+}
+
+"""A `CarModel` edge in the connection."""
+type CarModelsEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CarModel` at the end of the edge."""
+  node: CarModel
+}
+
+"""Methods to use when ordering `CarModel`."""
+enum CarModelsOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+  CAR_MAKE_ID_ASC
+  CAR_MAKE_ID_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `CarModel` object types. All fields are tested
+for equality and combined with a logical ‘and.’
+"""
+input CarModelCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: Int
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+
+  """Checks for equality with the object’s `carMakeId` field."""
+  carMakeId: Int
+}
+
+"""A `CarMake` edge in the connection."""
+type CarMakesEdge {
+  """A cursor for use in pagination."""
+  cursor: Cursor
+
+  """The `CarMake` at the end of the edge."""
+  node: CarMake
+}
+
+"""Methods to use when ordering `CarMake`."""
+enum CarMakesOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  NAME_ASC
+  NAME_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+"""
+A condition to be used against `CarMake` object types. All fields are tested for equality and combined with a logical ‘and.’
+"""
+input CarMakeCondition {
+  """Checks for equality with the object’s `id` field."""
+  id: Int
+
+  """Checks for equality with the object’s `name` field."""
+  name: String
+}
+
+"""
+The root mutation type which contains root level fields which mutate data.
+"""
+type Mutation {
+  """Creates a single `CarMake`."""
+  createCarMake(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCarMakeInput!
+  ): CreateCarMakePayload
+
+  """Creates a single `CarModel`."""
+  createCarModel(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateCarModelInput!
+  ): CreateCarModelPayload
+
+  """Creates a single `Member`."""
+  createMember(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: CreateMemberInput!
+  ): CreateMemberPayload
+
+  """Updates a single `CarMake` using its globally unique id and a patch."""
+  updateCarMake(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCarMakeInput!
+  ): UpdateCarMakePayload
+
+  """Updates a single `CarMake` using a unique key and a patch."""
+  updateCarMakeById(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCarMakeByIdInput!
+  ): UpdateCarMakePayload
+
+  """Updates a single `CarModel` using its globally unique id and a patch."""
+  updateCarModel(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCarModelInput!
+  ): UpdateCarModelPayload
+
+  """Updates a single `CarModel` using a unique key and a patch."""
+  updateCarModelById(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateCarModelByIdInput!
+  ): UpdateCarModelPayload
+
+  """Updates a single `Member` using its globally unique id and a patch."""
+  updateMember(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMemberInput!
+  ): UpdateMemberPayload
+
+  """Updates a single `Member` using a unique key and a patch."""
+  updateMemberById(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: UpdateMemberByIdInput!
+  ): UpdateMemberPayload
+
+  """Deletes a single `CarMake` using its globally unique id."""
+  deleteCarMake(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCarMakeInput!
+  ): DeleteCarMakePayload
+
+  """Deletes a single `CarMake` using a unique key."""
+  deleteCarMakeById(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCarMakeByIdInput!
+  ): DeleteCarMakePayload
+
+  """Deletes a single `CarModel` using its globally unique id."""
+  deleteCarModel(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCarModelInput!
+  ): DeleteCarModelPayload
+
+  """Deletes a single `CarModel` using a unique key."""
+  deleteCarModelById(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteCarModelByIdInput!
+  ): DeleteCarModelPayload
+
+  """Deletes a single `Member` using its globally unique id."""
+  deleteMember(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMemberInput!
+  ): DeleteMemberPayload
+
+  """Deletes a single `Member` using a unique key."""
+  deleteMemberById(
+    """
+    The exclusive input argument for this mutation. An object type, make sure to see documentation for this object’s fields.
+    """
+    input: DeleteMemberByIdInput!
+  ): DeleteMemberPayload
+}
+
+"""The output of our create `CarMake` mutation."""
+type CreateCarMakePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CarMake` that was created by this mutation."""
+  carMake: CarMake
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `CarMake`. May be used by Relay 1."""
+  carMakeEdge(
+    """The method to use when ordering `CarMake`."""
+    orderBy: [CarMakesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CarMakesEdge
+}
+
+"""All input for the create `CarMake` mutation."""
+input CreateCarMakeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `CarMake` to be created by this mutation."""
+  carMake: CarMakeInput!
+}
+
+"""An input for mutations affecting `CarMake`"""
+input CarMakeInput {
+  id: Int
+  name: String!
+}
+
+"""The output of our create `CarModel` mutation."""
+type CreateCarModelPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CarModel` that was created by this mutation."""
+  carModel: CarModel
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `CarMake` that is related to this `CarModel`."""
+  carMakeByCarMakeId: CarMake
+
+  """An edge for our `CarModel`. May be used by Relay 1."""
+  carModelEdge(
+    """The method to use when ordering `CarModel`."""
+    orderBy: [CarModelsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CarModelsEdge
+}
+
+"""All input for the create `CarModel` mutation."""
+input CreateCarModelInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `CarModel` to be created by this mutation."""
+  carModel: CarModelInput!
+}
+
+"""An input for mutations affecting `CarModel`"""
+input CarModelInput {
+  id: Int
+  name: String!
+  carMakeId: Int!
+}
+
+"""The output of our create `Member` mutation."""
+type CreateMemberPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Member` that was created by this mutation."""
+  member: Member
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `CarModel` that is related to this `Member`."""
+  carModelByCarModelId: CarModel
+
+  """An edge for our `Member`. May be used by Relay 1."""
+  memberEdge(
+    """The method to use when ordering `Member`."""
+    orderBy: [MembersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MembersEdge
+}
+
+"""All input for the create `Member` mutation."""
+input CreateMemberInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """The `Member` to be created by this mutation."""
+  member: MemberInput!
+}
+
+"""An input for mutations affecting `Member`"""
+input MemberInput {
+  id: Int
+  firstName: String!
+  lastName: String!
+  email: String!
+  carModelId: Int!
+  vin: String!
+  manufacturedDate: Datetime!
+  ageOfVehicle: Int
+  createdAt: Datetime
+}
+
+"""The output of our update `CarMake` mutation."""
+type UpdateCarMakePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CarMake` that was updated by this mutation."""
+  carMake: CarMake
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `CarMake`. May be used by Relay 1."""
+  carMakeEdge(
+    """The method to use when ordering `CarMake`."""
+    orderBy: [CarMakesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CarMakesEdge
+}
+
+"""All input for the `updateCarMake` mutation."""
+input UpdateCarMakeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `CarMake` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `CarMake` being updated.
+  """
+  carMakePatch: CarMakePatch!
+}
+
+"""
+Represents an update to a `CarMake`. Fields that are set will be updated.
+"""
+input CarMakePatch {
+  id: Int
+  name: String
+}
+
+"""All input for the `updateCarMakeById` mutation."""
+input UpdateCarMakeByIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `CarMake` being updated.
+  """
+  carMakePatch: CarMakePatch!
+  id: Int!
+}
+
+"""The output of our update `CarModel` mutation."""
+type UpdateCarModelPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CarModel` that was updated by this mutation."""
+  carModel: CarModel
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `CarMake` that is related to this `CarModel`."""
+  carMakeByCarMakeId: CarMake
+
+  """An edge for our `CarModel`. May be used by Relay 1."""
+  carModelEdge(
+    """The method to use when ordering `CarModel`."""
+    orderBy: [CarModelsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CarModelsEdge
+}
+
+"""All input for the `updateCarModel` mutation."""
+input UpdateCarModelInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `CarModel` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `CarModel` being updated.
+  """
+  carModelPatch: CarModelPatch!
+}
+
+"""
+Represents an update to a `CarModel`. Fields that are set will be updated.
+"""
+input CarModelPatch {
+  id: Int
+  name: String
+  carMakeId: Int
+}
+
+"""All input for the `updateCarModelById` mutation."""
+input UpdateCarModelByIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `CarModel` being updated.
+  """
+  carModelPatch: CarModelPatch!
+  id: Int!
+}
+
+"""The output of our update `Member` mutation."""
+type UpdateMemberPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Member` that was updated by this mutation."""
+  member: Member
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `CarModel` that is related to this `Member`."""
+  carModelByCarModelId: CarModel
+
+  """An edge for our `Member`. May be used by Relay 1."""
+  memberEdge(
+    """The method to use when ordering `Member`."""
+    orderBy: [MembersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MembersEdge
+}
+
+"""All input for the `updateMember` mutation."""
+input UpdateMemberInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `Member` to be updated.
+  """
+  nodeId: ID!
+
+  """
+  An object where the defined keys will be set on the `Member` being updated.
+  """
+  memberPatch: MemberPatch!
+}
+
+"""
+Represents an update to a `Member`. Fields that are set will be updated.
+"""
+input MemberPatch {
+  id: Int
+  firstName: String
+  lastName: String
+  email: String
+  carModelId: Int
+  vin: String
+  manufacturedDate: Datetime
+  ageOfVehicle: Int
+  createdAt: Datetime
+}
+
+"""All input for the `updateMemberById` mutation."""
+input UpdateMemberByIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  An object where the defined keys will be set on the `Member` being updated.
+  """
+  memberPatch: MemberPatch!
+  id: Int!
+}
+
+"""The output of our delete `CarMake` mutation."""
+type DeleteCarMakePayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CarMake` that was deleted by this mutation."""
+  carMake: CarMake
+  deletedCarMakeId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """An edge for our `CarMake`. May be used by Relay 1."""
+  carMakeEdge(
+    """The method to use when ordering `CarMake`."""
+    orderBy: [CarMakesOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CarMakesEdge
+}
+
+"""All input for the `deleteCarMake` mutation."""
+input DeleteCarMakeInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `CarMake` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deleteCarMakeById` mutation."""
+input DeleteCarMakeByIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: Int!
+}
+
+"""The output of our delete `CarModel` mutation."""
+type DeleteCarModelPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `CarModel` that was deleted by this mutation."""
+  carModel: CarModel
+  deletedCarModelId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `CarMake` that is related to this `CarModel`."""
+  carMakeByCarMakeId: CarMake
+
+  """An edge for our `CarModel`. May be used by Relay 1."""
+  carModelEdge(
+    """The method to use when ordering `CarModel`."""
+    orderBy: [CarModelsOrderBy!] = [PRIMARY_KEY_ASC]
+  ): CarModelsEdge
+}
+
+"""All input for the `deleteCarModel` mutation."""
+input DeleteCarModelInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `CarModel` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deleteCarModelById` mutation."""
+input DeleteCarModelByIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: Int!
+}
+
+"""The output of our delete `Member` mutation."""
+type DeleteMemberPayload {
+  """
+  The exact same `clientMutationId` that was provided in the mutation input,
+  unchanged and unused. May be used by a client to track mutations.
+  """
+  clientMutationId: String
+
+  """The `Member` that was deleted by this mutation."""
+  member: Member
+  deletedMemberId: ID
+
+  """
+  Our root query field type. Allows us to run any query from our mutation payload.
+  """
+  query: Query
+
+  """Reads a single `CarModel` that is related to this `Member`."""
+  carModelByCarModelId: CarModel
+
+  """An edge for our `Member`. May be used by Relay 1."""
+  memberEdge(
+    """The method to use when ordering `Member`."""
+    orderBy: [MembersOrderBy!] = [PRIMARY_KEY_ASC]
+  ): MembersEdge
+}
+
+"""All input for the `deleteMember` mutation."""
+input DeleteMemberInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+
+  """
+  The globally unique `ID` which will identify a single `Member` to be deleted.
+  """
+  nodeId: ID!
+}
+
+"""All input for the `deleteMemberById` mutation."""
+input DeleteMemberByIdInput {
+  """
+  An arbitrary string value with no semantic meaning. Will be included in the
+  payload verbatim. May be used to track mutations by the client.
+  """
+  clientMutationId: String
+  id: Int!
+}

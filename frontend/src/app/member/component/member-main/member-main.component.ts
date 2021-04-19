@@ -2,12 +2,11 @@ import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { DateTime } from 'luxon';
 import { Subscription } from 'rxjs';
-import { navigate, sort } from 'src/app/state/actions/member.actions';
-import { MemberForm } from '../../model/member-form.model';
 import { MemberPage } from '../../model/member-page.model';
 import { Member } from '../../model/member.model';
 import { SortMode } from '../../model/sort-mode.enum';
 import { MemberService } from '../../service/member.service';
+import { navigate, sort } from '../../state/actions/member.actions';
 import { MemberFormComponent } from '../member-form/member-form.component';
 
 @Component({

@@ -4,7 +4,7 @@ import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Subscription } from 'rxjs';
 import { JobStatusService } from '../../service/job-status.service';
 import { MemberService } from '../../service/member.service';
-import { ToastService } from '../../service/toast.service';
+import { ToastService } from '../../../shared/service/toast.service';
 
 @Component({
   selector: 'member-import-form',
@@ -46,7 +46,7 @@ export class MemberImportFormComponent {
       const formData = new FormData();
       formData.append("file", this.importForm.value.fileSource);
       console.log(this.importForm.value.fileSource);
-      this.subscriptions.add(this.memberService.uploadFile(formData).subscribe((response) => {
+      this.subscriptions.add(this.memberService.importFile(formData).subscribe((response) => {
         this.formSubmitting = false;
         this.hideMemberImportForm();
 
@@ -62,7 +62,7 @@ export class MemberImportFormComponent {
           },
           header: "Importing members"
         });
-        this.jobStatus.connect(response?.jobId).subscribe({
+        this.jobStatus.connect(response?.jobId, 'import').subscribe({
           next: (data) => {
             console.log("component listener", data);
             progressToast.progressBar = {

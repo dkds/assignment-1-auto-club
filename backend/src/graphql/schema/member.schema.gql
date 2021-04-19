@@ -1,0 +1,76 @@
+"""Methods to use when ordering `Member`."""
+enum MembersOrderBy {
+  NATURAL
+  ID_ASC
+  ID_DESC
+  FIRST_NAME_ASC
+  FIRST_NAME_DESC
+  LAST_NAME_ASC
+  LAST_NAME_DESC
+  EMAIL_ASC
+  EMAIL_DESC
+  CAR_MODEL_ID_ASC
+  CAR_MODEL_ID_DESC
+  VIN_ASC
+  VIN_DESC
+  MANUFACTURED_DATE_ASC
+  MANUFACTURED_DATE_DESC
+  AGE_OF_VEHICLE_ASC
+  AGE_OF_VEHICLE_DESC
+  CREATED_AT_ASC
+  CREATED_AT_DESC
+  PRIMARY_KEY_ASC
+  PRIMARY_KEY_DESC
+}
+
+type Query {
+  members(
+    """Only read the first `n` values of the set."""
+    first: Int
+
+    """
+    Skip the first `n` values from our `after` cursor, an alternative to cursor
+    based pagination. May not be used with `last`.
+    """
+    offset: Int
+
+    """The method to use when ordering `Member`."""
+    orderBy: MembersOrderBy
+  ): MemberPage
+  member(id: ID): MemberView
+}
+
+type Mutation {
+  createMember(memberInput: MemberInput): MemberView
+  updateMember(memberInput: MemberInput): MemberView
+  deleteMember(id: ID): Int
+}
+
+scalar Datetime
+
+type MemberPage  {
+    totalCount: Int
+    nodes: [MemberView]
+}
+
+type MemberView  {
+    id: Int!
+    firstName: String!
+    lastName: String!
+    email: String!
+    vin: String!
+    mfd: Datetime!
+    carModel: String!
+    carMake: String!
+}
+
+input MemberInput  {
+    id: Int
+    firstName: String!
+    lastName: String!
+    email: String!
+    vin: String!
+    mfd: Datetime!
+    carModel: String!
+    carMake: String!
+}

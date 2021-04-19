@@ -1,7 +1,7 @@
 module.exports = {
   options: {
-    connection: "postgres://zepcdnjt:Fl0MRlYeQxLgpkFcOMoSYiN9Nu3HpnKX@tai.db.elephantsql.com:5432/zepcdnjt",
-    schema: ["test_schema"],
-    cors: true
+    connection: "postgres://postgres:example@localhost:5432/postgres",
+    schema: ["public"],
+    cors: true,
   },
 };

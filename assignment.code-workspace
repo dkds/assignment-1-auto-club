@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "bulk-process-service"
+		},
+		{
+			"path": "backend"
+		},
+		{
+			"path": "db"
+		},
+		{
+			"path": "frontend"
+		},
+		{
+			"path": "postgraphile"
+		},
+		{
+			"path": "config"
+		}
+	],
+	"settings": {}
+}
