@@ -8,6 +8,7 @@ import { Component, EventEmitter, Output } from '@angular/core';
 export class HeaderComponent {
 
   @Output('onLinkClick') onLink: EventEmitter<string> = new EventEmitter();
+
   title = "Simple Auto Club"
   collapsed = false;
 

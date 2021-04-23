@@ -1,27 +1,26 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { Store } from '@ngrx/store';
 import { DateTime } from 'luxon';
-import { Subscription } from 'rxjs';
-import { mergeMap } from 'rxjs/operators';
-import { CarModel } from 'src/app/car-model/model/car-model.model';
-import { CarModelService } from 'src/app/car-model/service/car-model.service';
-import { MemberForm } from '../../model/member-form.model';
-import { Member } from '../../model/member.model';
-import { MemberService } from '../../service/member.service';
+import { Observable, Subscription } from 'rxjs';
+import { CarModel } from 'src/app/core/model/car-model.model';
+import { save } from 'src/app/core/state/member/member.actions';
+import { MemberForm } from '../../../core/model/member-form.model';
+import { Member } from '../../../core/model/member.model';
 
 @Component({
   selector: 'member-form',
   templateUrl: './member-form.component.html',
   styleUrls: ['./member-form.component.css'],
 })
-export class MemberFormComponent implements OnInit {
+export class MemberFormComponent implements OnInit, OnDestroy {
 
   @ViewChild("memberFormContainer") memberFormContainer!: NgbCollapse;
   @Output("formShown") formShownEmitter = new EventEmitter();
   @Output("formHidden") formHiddenEmitter = new EventEmitter();
 
-  carModelList: CarModel[] = [];
+  carModelList: Observable<CarModel[]> = this.store.select((state: any) => state.carModel.list.carModels);
   formSubmitted = false;
   formCollapsed = true;
   formSubmitting = false;
@@ -38,19 +37,27 @@ export class MemberFormComponent implements OnInit {
   private subscriptions: Subscription = new Subscription();
 
   constructor(
-    private formBuilder: FormBuilder,
-    private carModelService: CarModelService,
-    private memberService: MemberService) { }
+    private store: Store,
+    private formBuilder: FormBuilder) { }
 
   get form() {
     return this.memberForm.controls;
   }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.carModelService.getCarModels().subscribe((carModels: CarModel[]) => {
-      console.log("loaded makes", carModels);
-      this.carModelList = carModels;
-    }));
+    this.subscriptions.add(
+      this.store.select((state: any) => state.member.save.loading).subscribe((loading) => {
+        console.log("state.member.save.loading", loading);
+        this.formSubmitting = loading;
+        if (!loading) {
+          this.hide();
+        }
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
   }
 
   onMemberFormSubmit() {
@@ -60,25 +67,18 @@ export class MemberFormComponent implements OnInit {
     }
     this.formSubmitted = true;
     if (this.memberForm.valid) {
-      this.formSubmitting = true;
-      this.subscriptions.add(this.carModelService.getCarModel(this.form.carModelId.value)
-        .pipe(
-          mergeMap((carModel: CarModel) => {
-            const member = {
-              id: this.memberForm.value.id,
-              firstName: this.memberForm.value.firstName,
-              lastName: this.memberForm.value.lastName,
-              email: this.memberForm.value.email,
-              vin: this.memberForm.value.vinNumber,
-              mfd: DateTime.fromObject(this.memberForm.value.mfd).toISODate()
-            } as Member;
-            member.carModel = carModel;
-            return this.memberService.saveMember(member);
-          })
-        ).subscribe(() => {
-          this.formSubmitting = false;
-          this.hide();
-        }));
+
+      const member = {
+        id: this.memberForm.value.id,
+        firstName: this.memberForm.value.firstName,
+        lastName: this.memberForm.value.lastName,
+        email: this.memberForm.value.email,
+        vin: this.memberForm.value.vinNumber,
+        carModel: { id: this.memberForm.value.carModelId },
+        mfd: DateTime.fromObject(this.memberForm.value.mfd).toISODate()
+      } as Member;
+
+      this.store.dispatch(save({ member }));
     }
   }
 
@@ -103,18 +103,18 @@ export class MemberFormComponent implements OnInit {
   }
 
   toggle() {
-    this.memberFormContainer.toggle();
+    this.memberFormContainer?.toggle();
   }
 
   show() {
-    if (this.memberFormContainer.collapsed) {
-      this.memberFormContainer.toggle();
+    if (this.memberFormContainer?.collapsed) {
+      this.memberFormContainer?.toggle();
     }
   }
 
   hide() {
-    if (!this.memberFormContainer.collapsed) {
-      this.memberFormContainer.toggle();
+    if (!this.memberFormContainer?.collapsed) {
+      this.memberFormContainer?.toggle();
     }
   }
 }

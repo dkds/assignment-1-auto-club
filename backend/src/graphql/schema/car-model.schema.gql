@@ -18,11 +18,11 @@ type CarModelPage  {
 type CarModelView  {
     id: Int!
     name: String!
-    carMake: String!
+    carMake: CarMakeView!
 }
 
 input CarModelInput  {
     id: Int
     name: String!
-    carMake: String!
+    carMake: CarMakeInput!
 }

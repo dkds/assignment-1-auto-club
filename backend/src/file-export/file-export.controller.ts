@@ -7,12 +7,12 @@ import { MinioClientService } from '../minio-client/minio-client.service';
 
 const EXPORT_CRITERIA = [
   {
-    code: 'default',
-    text: 'Default'
+    code: 'CAR_OLDER_THAN_5',
+    text: 'Members with cars older than 5 years'
   },
   {
-    code: 'by-age',
-    text: 'By Age'
+    code: 'CAR_OLDER_THAN_15',
+    text: 'Members with cars older than 15 years'
   }
 ]
 

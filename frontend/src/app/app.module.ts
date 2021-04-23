@@ -6,7 +6,10 @@ import { MemberModule } from './member/member.module';
 import { CoreModule } from './core/core.module';
 
 import { AppComponent } from './app.component';
-import { JobStatusService } from './member/service/job-status.service';
+import { JobStatusService } from './core/service/job-status.service';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
+import { CarModelModule } from './car-model/car-model.module';
 
 @NgModule({
   declarations: [
@@ -18,6 +21,9 @@ import { JobStatusService } from './member/service/job-status.service';
     GraphQLModule,
     CoreModule,
     MemberModule,
+    CarModelModule,
+    EffectsModule.forRoot([]),
+    StoreModule.forRoot([])
   ],
   providers: [JobStatusService],
   bootstrap: [AppComponent]

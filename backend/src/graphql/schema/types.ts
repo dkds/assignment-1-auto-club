@@ -39,7 +39,7 @@ export class CarMakeInput {
 export class CarModelInput {
     id?: number;
     name: string;
-    carMake: string;
+    carMake: CarMakeInput;
 }
 
 export class MemberInput {
@@ -49,8 +49,7 @@ export class MemberInput {
     email: string;
     vin: string;
     mfd: Datetime;
-    carModel: string;
-    carMake: string;
+    carModel: CarModelInput;
 }
 
 export abstract class IQuery {
@@ -105,7 +104,7 @@ export class CarModelPage {
 export class CarModelView {
     id: number;
     name: string;
-    carMake: string;
+    carMake: CarMakeView;
 }
 
 export class MemberPage {
@@ -120,8 +119,7 @@ export class MemberView {
     email: string;
     vin: string;
     mfd: Datetime;
-    carModel: string;
-    carMake: string;
+    carModel: CarModelView;
 }
 
 export type Datetime = any;

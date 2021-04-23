@@ -4,8 +4,12 @@ import { RouterModule, Routes } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { GraphQLModule } from '../graphql.module';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreModule } from '@ngrx/store';
 
 import { CarMakeComponent } from './component/car-make-main.component';
+import { carMakeListReducer, carMakeRemoveReducer, carMakeSaveReducer } from '../core/state/car-make/car-make.reducers';
+import { CarMakeEffects } from '../core/state/car-make/car-make.effects';
 
 
 const routes: Routes = [
@@ -21,7 +25,13 @@ const routes: Routes = [
     CommonModule,
     ReactiveFormsModule,
     NgbCollapseModule,
-    GraphQLModule
+    GraphQLModule,
+    EffectsModule.forFeature([CarMakeEffects]),
+    StoreModule.forFeature('carMake', {
+      list: carMakeListReducer,
+      save: carMakeSaveReducer,
+      remove: carMakeRemoveReducer,
+    })
   ],
   declarations: [
     CarMakeComponent

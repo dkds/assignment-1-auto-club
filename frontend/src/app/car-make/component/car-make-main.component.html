@@ -6,10 +6,12 @@
           <h5>
             Car Makes
             <div class="float-right">
-              <button class="btn btn-sm btn-dark" (click)="carMakeFormContainer.toggle()"
+              <button class="btn btn-sm" (click)="carMakeFormContainer.toggle()"
+                [class.btn-outline-dark]="carMakeFormCollapsed" [class.btn-dark]="!carMakeFormCollapsed"
                 [attr.aria-expanded]="!carMakeFormCollapsed" aria-controls="carMakeFormContainer">{{formMode}}</button>
             </div>
           </h5>
+
           <div #carMakeFormContainer="ngbCollapse" [(ngbCollapse)]="carMakeFormCollapsed" (shown)="onFormShown()"
             (hidden)="onFormHidden()" class="collapse mt-3" id="carMakeFormContainer">
             <div class="card card-body">
@@ -27,12 +29,15 @@
               </form>
             </div>
           </div>
+
         </div>
       </div>
+
       <div class="row item-container">
         <div class="col-12">
           <ul class="list-group">
-            <li *ngFor="let carMake of carMakeList" class="list-group-item list-group-item-action" aria-current="true">
+            <li *ngFor="let carMake of carMakeList | async" class="list-group-item list-group-item-action"
+              aria-current="true">
               <div class="d-flex w-100 justify-content-between">
                 <h6 class="mb-1">{{carMake.name}}</h6>
                 <div class="float-right">
@@ -48,6 +53,7 @@
           </ul>
         </div>
       </div>
+
     </div>
   </div>
 </div>

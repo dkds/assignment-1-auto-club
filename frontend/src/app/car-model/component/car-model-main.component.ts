@@ -1,12 +1,11 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
-import { Subscription } from 'rxjs';
-import { map, mergeMap } from 'rxjs/operators';
-import { CarMake } from 'src/app/car-make/model/car-make.model';
-import { CarMakeService } from 'src/app/car-make/service/car-make.service';
-import { CarModel } from '../model/car-model.model';
-import { CarModelService } from '../service/car-model.service';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
+import { CarMake } from 'src/app/core/model/car-make.model';
+import { remove, save } from 'src/app/core/state/car-model/car-model.actions';
+import { CarModel } from '../../core/model/car-model.model';
 
 @Component({
   selector: 'car-model-main',
@@ -16,8 +15,9 @@ import { CarModelService } from '../service/car-model.service';
 export class CarModelComponent implements OnInit, OnDestroy {
 
   @ViewChild("carModelFormContainer") carModelFormContainer!: NgbCollapse;
-  carModelList: CarModel[] = [];
-  carMakeList: CarMake[] = [];
+
+  carModelList: Observable<CarModel[]> = this.store.select((state: any) => state.carModel.list.carModels);
+  carMakeList: Observable<CarMake[]> = this.store.select((state: any) => state.carMake.list.carMakes);
   formMode: string = "New";
   carModelFormSubmitted = false;
   carModelFormCollapsed = true;
@@ -30,9 +30,8 @@ export class CarModelComponent implements OnInit, OnDestroy {
   subscriptions: Subscription = new Subscription();
 
   constructor(
-    private formBuilder: FormBuilder,
-    private carMakeService: CarMakeService,
-    private carModelService: CarModelService) {
+    private store: Store,
+    private formBuilder: FormBuilder) {
   }
 
   get form() {
@@ -40,26 +39,35 @@ export class CarModelComponent implements OnInit, OnDestroy {
   }
 
   private showCarModelForm() {
-    if (this.carModelFormContainer.collapsed) {
-      this.carModelFormContainer.toggle();
+    if (this.carModelFormContainer?.collapsed) {
+      this.carModelFormContainer?.toggle();
     }
   }
 
   private hideCarModelForm() {
-    if (!this.carModelFormContainer.collapsed) {
-      this.carModelFormContainer.toggle();
+    if (!this.carModelFormContainer?.collapsed) {
+      this.carModelFormContainer?.toggle();
     }
   }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.carMakeService.getCarMakes().subscribe((carMakes: CarMake[]) => {
-      console.log("updated makes", carMakes);
-      this.carMakeList = carMakes;
-    }));
-    this.subscriptions.add(this.carModelService.getCarModels().subscribe((carModels: CarModel[]) => {
-      console.log("updated models", carModels);
-      this.carModelList = carModels
-    }));
+    this.subscriptions.add(
+      this.store.select((state: any) => state.carModel.save.loading).subscribe((loading) => {
+        console.log("state.member.save.loading", loading);
+        this.carModelFormSubmitting = loading;
+        if (!loading) {
+          this.hideCarModelForm();
+        }
+      })
+    );
+    this.subscriptions.add(
+      this.store.select((state: any) => state.carModel.remove.loading).subscribe((loading) => {
+        this.carModelFormSubmitting = loading;
+        if (!loading) {
+          this.hideCarModelForm();
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -73,25 +81,24 @@ export class CarModelComponent implements OnInit, OnDestroy {
     }
     this.carModelFormSubmitted = true;
     if (this.carModelForm.valid) {
-      this.carModelFormSubmitting = true;
-      this.subscriptions.add(this.carMakeService.getCarMake(this.form.carMakeId.value)
-        .pipe(
-          mergeMap((carMake: CarMake) => {
-            const carModel = { id: this.carModelForm.value.id, name: this.carModelForm.value.name } as CarModel;
-            carModel.carMake = carMake;
-            return this.carModelService.saveCarModel(carModel);
-          })
-        ).subscribe(() => {
-          this.carModelFormSubmitting = false;
-          this.hideCarModelForm();
-        }));
+
+      const carModel = {
+        id: this.carModelForm.value.id,
+        name: this.carModelForm.value.name,
+        carMake: { id: this.carModelForm.value.carMakeId },
+      } as CarModel;
+      this.store.dispatch(save({ carModel }));
     }
   }
 
   onItemEditClick(e: Event, carModel: CarModel) {
     e.preventDefault();
     this.carModelForm.reset();
-    this.carModelForm.setValue({ id: carModel.id, name: carModel.name, carMakeId: carModel.carMake?.id });
+    this.carModelForm.setValue({
+      id: carModel?.id,
+      name: carModel?.name,
+      carMakeId: carModel?.carMake?.id
+    });
     this.showCarModelForm();
   }
 
@@ -103,11 +110,7 @@ export class CarModelComponent implements OnInit, OnDestroy {
     console.log("delete", carModel);
     if (confirm(`Are you sure you want to delete '${carModel.name}'`)) {
       this.form.name.disable();
-      this.carModelFormSubmitting = true;
-      this.subscriptions.add(this.carModelService.deleteCarModel(carModel).subscribe(() => {
-        this.carModelFormSubmitting = false;
-        this.hideCarModelForm();
-      }));
+      this.store.dispatch(remove({ id: carModel.id }));
     }
   }
 

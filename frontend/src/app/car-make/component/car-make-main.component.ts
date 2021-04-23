@@ -1,9 +1,10 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
-import { Subscription } from 'rxjs';
-import { CarMake } from '../model/car-make.model';
-import { CarMakeService } from '../service/car-make.service';
+import { Store } from '@ngrx/store';
+import { Observable, Subscription } from 'rxjs';
+import { remove, save } from 'src/app/core/state/car-make/car-make.actions';
+import { CarMake } from '../../core/model/car-make.model';
 
 @Component({
   selector: 'car-make-main',
@@ -13,7 +14,8 @@ import { CarMakeService } from '../service/car-make.service';
 export class CarMakeComponent implements OnInit, OnDestroy {
 
   @ViewChild("carMakeFormContainer") carMakeFormContainer!: NgbCollapse;
-  carMakeList: CarMake[] = [];
+
+  carMakeList: Observable<CarMake[]> = this.store.select((state: any) => state.carMake.list.carMakes);
   formMode: string = "New";
   carMakeFormSubmitted = false;
   carMakeFormCollapsed = true;
@@ -25,8 +27,8 @@ export class CarMakeComponent implements OnInit, OnDestroy {
   subscriptions: Subscription = new Subscription();
 
   constructor(
-    private formBuilder: FormBuilder,
-    private carMakeService: CarMakeService) {
+    private store: Store,
+    private formBuilder: FormBuilder) {
   }
 
   get form() {
@@ -46,10 +48,23 @@ export class CarMakeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.carMakeService.getCarMakes().subscribe((carMakes: CarMake[]) => {
-      console.log("updated", carMakes);
-      this.carMakeList = carMakes
-    }));
+    this.subscriptions.add(
+      this.store.select((state: any) => state.carMake.save.loading).subscribe((loading) => {
+        console.log("state.carMake.save.loading", loading);
+        this.carMakeFormSubmitting = loading;
+        if (!loading) {
+          this.hideCarMakeForm();
+        }
+      })
+    );
+    this.subscriptions.add(
+      this.store.select((state: any) => state.carMake.remove.loading).subscribe((loading) => {
+        this.carMakeFormSubmitting = loading;
+        if (!loading) {
+          this.hideCarMakeForm();
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -63,11 +78,7 @@ export class CarMakeComponent implements OnInit, OnDestroy {
     }
     this.carMakeFormSubmitted = true;
     if (this.carMakeForm.valid) {
-      this.carMakeFormSubmitting = true;
-      this.subscriptions.add(this.carMakeService.saveCarMake(this.carMakeForm.value as CarMake).subscribe(() => {
-        this.carMakeFormSubmitting = false;
-        this.hideCarMakeForm();
-      }));
+      this.store.dispatch(save({ carMake: this.carMakeForm.value }));
     }
   }
 
@@ -86,11 +97,7 @@ export class CarMakeComponent implements OnInit, OnDestroy {
     console.log("delete", carMake);
     if (confirm(`Are you sure you want to delete '${carMake.name}'`)) {
       this.form.name.disable();
-      this.carMakeFormSubmitting = true;
-      this.subscriptions.add(this.carMakeService.deleteCarMake(carMake).subscribe(() => {
-        this.carMakeFormSubmitting = false;
-        this.hideCarMakeForm();
-      }));
+      this.store.dispatch(remove({ id: this.carMakeForm.value.id }));
     }
   }
 

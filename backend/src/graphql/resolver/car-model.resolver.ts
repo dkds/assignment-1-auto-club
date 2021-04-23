@@ -1,43 +1,36 @@
-import { ParseIntPipe } from '@nestjs/common';
-import { Args, Mutation, Parent, Query, ResolveField, Resolver, Subscription } from '@nestjs/graphql';
-import { PubSub } from 'graphql-subscriptions';
-import { mergeMap, pluck } from 'rxjs/operators';
-import { CarModelService } from 'src/core/service/car-model.service';
+import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { CarModelInput } from '../schema/types';
+import { CarModelService } from '../service/car-model.service';
 
-const pubSub = new PubSub();
-
-@Resolver('CarModel')
+@Resolver('CarModelPage')
 export class CarModelResolver {
 
     constructor(
-        private readonly memberService: CarModelService) { }
+        private readonly carModelService: CarModelService) { }
 
     @Query('carModels')
-    async listCarModel() {
-        return this.memberService.findAll();
+    async listCarModels(
+        @Args('first') first: number,
+        @Args('offset') offset: number,
+        @Args('orderBy') orderBy: string) {
+        return this.carModelService.list({ first, offset, orderBy });
     }
 
-    // @Query('membersByRegex')
-    // async getCarModelByRegex() {
-    //     return this.memberService.findAll();
-    // }
+    @Mutation('createCarModel')
+    async createCarModel(
+        @Args('carModelInput') carModelInput: CarModelInput) {
+        return this.carModelService.create({ ...carModelInput });
+    }
 
-    // @ResolveField()
-    // async carModel(@Parent() member) {
-    //     const { carModelId } = member;
-    //     return this.carModelService.getCarModelById(carModelId)
-    //         .pipe(
-    //             pluck('name')
-    //         );
-    // }
+    @Mutation('updateCarModel')
+    async updateCarModel(
+        @Args('carModelInput') carModelInput: CarModelInput) {
+        return this.carModelService.update({ ...carModelInput });
+    }
 
-    // @ResolveField()
-    // async carMake(@Parent() member) {
-    //     const { carModelId } = member;
-    //     return this.carModelService.getCarModelById(carModelId)
-    //         .pipe(
-    //             mergeMap((carModel) => this.carMakeService.getCarMakeById(carModel.carMakeId)),
-    //             pluck('name'),
-    //         );
-    // }
+    @Mutation('deleteCarModel')
+    async deleteCarModel(
+        @Args('id') id: number) {
+        return this.carModelService.delete(id);
+    }
 }

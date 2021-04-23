@@ -1,16 +1,18 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Subscription } from 'rxjs';
-import { JobStatusService } from '../../service/job-status.service';
-import { MemberService } from '../../service/member.service';
+import { JobStatusService } from '../../../core/service/job-status.service';
 import { ToastService } from '../../../shared/service/toast.service';
+import { Store } from '@ngrx/store';
+import { importList, listReload } from '../../../core/state/member/member.actions';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'member-import-form',
   templateUrl: './member-import-form.component.html',
 })
-export class MemberImportFormComponent {
+export class MemberImportFormComponent implements OnInit {
 
   @ViewChild("memberImportFormContainer") memberImportFormContainer!: NgbCollapse;
 
@@ -25,11 +27,59 @@ export class MemberImportFormComponent {
   subscriptions: Subscription = new Subscription();
 
   constructor(
+    private store: Store,
     private toastService: ToastService,
     private formBuilder: FormBuilder,
-    private jobStatus: JobStatusService,
-    private memberService: MemberService) { }
+    private jobStatus: JobStatusService) { }
 
+  ngOnInit(): void {
+    this.subscriptions.add(
+      this.store.select((state: any) => state.member.import.loading).subscribe((loading) => {
+        console.log('state.member.import.loading', loading);
+        this.formSubmitting = loading;
+      })
+    );
+    this.subscriptions.add(
+      this.store.select((state: any) => state.member.import.jobId)
+        .pipe(filter((jobId: string) => jobId != null))
+        .subscribe((jobId: string) => {
+          this.hideMemberImportForm();
+
+          console.log("response", jobId);
+
+          const progressToast = this.toastService.showProgress({
+            progressBar: {
+              type: "dark",
+              value: 100,
+              striped: true,
+              animated: true,
+              text: "Preparing import..."
+            },
+            header: "Importing members"
+          });
+          this.jobStatus.connect(jobId, 'import').subscribe({
+            next: (data) => {
+              console.log("component listener", data);
+              progressToast.progressBar = {
+                type: "primary",
+                text: `importing ${data.progress}%`,
+                value: data.progress
+              };
+            },
+            complete: () => {
+              console.log("import complete");
+              progressToast.autohide = true;
+              progressToast.progressBar = {
+                type: "success",
+                text: 'importing done',
+                value: 100
+              };
+              this.store.dispatch(listReload());
+            }
+          });
+        })
+    );
+  }
 
   get form() {
     return this.importForm.controls;
@@ -42,47 +92,7 @@ export class MemberImportFormComponent {
     }
     this.formSubmitted = true;
     if (this.importForm.valid) {
-      this.formSubmitting = true;
-      const formData = new FormData();
-      formData.append("file", this.importForm.value.fileSource);
-      console.log(this.importForm.value.fileSource);
-      this.subscriptions.add(this.memberService.importFile(formData).subscribe((response) => {
-        this.formSubmitting = false;
-        this.hideMemberImportForm();
-
-        console.log("response", response);
-
-        const progressToast = this.toastService.showProgress({
-          progressBar: {
-            type: "dark",
-            value: 100,
-            striped: true,
-            animated: true,
-            text: "Preparing import..."
-          },
-          header: "Importing members"
-        });
-        this.jobStatus.connect(response?.jobId, 'import').subscribe({
-          next: (data) => {
-            console.log("component listener", data);
-            progressToast.progressBar = {
-              type: "primary",
-              text: `importing ${data.progress}%`,
-              value: data.progress
-            };
-          },
-          complete: () => {
-            console.log("import complete");
-            progressToast.autohide = true;
-            progressToast.progressBar = {
-              type: "success",
-              text: 'importing done',
-              value: 100
-            };
-            this.memberService.refresh();
-          }
-        });
-      }));
+      this.store.dispatch(importList(this.importForm.value.fileSource));
     }
   }
 
@@ -116,5 +126,4 @@ export class MemberImportFormComponent {
       this.memberImportFormContainer.toggle();
     }
   }
-
 }

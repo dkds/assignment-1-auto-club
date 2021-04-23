@@ -1,12 +1,10 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { DateTime } from 'luxon';
-import { Subscription } from 'rxjs';
-import { MemberPage } from '../../model/member-page.model';
-import { Member } from '../../model/member.model';
-import { SortMode } from '../../model/sort-mode.enum';
-import { MemberService } from '../../service/member.service';
-import { navigate, sort } from '../../state/actions/member.actions';
+import { Observable, Subscription } from 'rxjs';
+import { Member } from '../../../core/model/member.model';
+import { SortMode } from '../../../core/model/sort-mode.enum';
+import { listLoad, listNavigate, remove, listSort, listSearch } from '../../../core/state/member/member.actions';
 import { MemberFormComponent } from '../member-form/member-form.component';
 
 @Component({
@@ -19,24 +17,28 @@ export class MemberComponent implements OnInit, OnDestroy {
   @ViewChild("memberFormContainer") memberForm!: MemberFormComponent;
 
   subscriptions: Subscription = new Subscription();
-  memberList: Member[] = [];
+  memberList: Observable<Member[]> = this.store.select((state: any) => state.member.list.members);
+  totalMemberSize: Observable<number> = this.store.select((state: any) => state.member.list.totalCount);
   sortModes: { name: string, text: SortMode }[] = Object.entries(SortMode).map(([name, text]) => ({ name, text }));
+
   memberFormMode: string = "New";
-  page = 1;
   pageSize = 5;
-  totalMemberSize = 0;
   listProcessing = false;
 
-  constructor(
-    private memberService: MemberService,
-    private store: Store) { }
+  constructor(private store: Store) { }
 
   ngOnInit(): void {
-    this.subscriptions.add(this.memberService.getMembers().subscribe((memberPage: MemberPage) => {
-      console.log("loaded models", memberPage);
-      this.memberList = memberPage.members;
-      this.totalMemberSize = memberPage.totalCount;
-    }));
+    this.store.dispatch(listLoad());
+
+    this.subscriptions.add(
+      this.store.select((state: any) => state.member.remove.loading).subscribe((loading) => {
+        this.listProcessing = loading;
+        console.log('this.memberForm', this.memberForm, loading);
+        if (!loading) {
+          this.memberForm?.hide();
+        }
+      })
+    );
   }
 
   ngOnDestroy(): void {
@@ -65,22 +67,23 @@ export class MemberComponent implements OnInit, OnDestroy {
     }
     console.log("delete", member);
     if (confirm(`Are you sure you want to delete '${member.firstName} ${member.lastName}'`)) {
-      this.listProcessing = true;
-      this.subscriptions.add(this.memberService.deleteMember(member).subscribe(() => {
-        this.listProcessing = false;
-        this.memberForm.hide();
-      }));
+      this.store.dispatch(remove({ id: member.id }));
     }
   }
 
   onSortModeChange(event: Event) {
     const value = (event.target as HTMLInputElement).value;
-    this.store.dispatch(sort({ sortMode: value }));
+    this.store.dispatch(listSort({ sortMode: value }));
+  }
+
+  onSearch(query: string) {
+    console.log('search', query);
+    this.store.dispatch(listSearch({ query }));
   }
 
   onPageChange(page: number) {
     const pageNumber = page - 1;
-    this.store.dispatch(navigate({ offset: pageNumber * this.pageSize, first: this.pageSize }));
+    this.store.dispatch(listNavigate({ offset: pageNumber * this.pageSize, first: this.pageSize }));
   }
 
   onFormShown() {

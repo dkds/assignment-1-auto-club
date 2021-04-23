@@ -5,15 +5,15 @@
       <div class="form-group">
         <label for="memberImportFile">Import excel</label>
         <div class="custom-file">
-          <input type="file" class="custom-file-input" id="memberImportFile" formControlName="file"
+          <input type="file" class="custom-file-input " id="memberImportFile" formControlName="file"
             [class.is-invalid]="formSubmitted && form.file.errors" (change)="onFileChange($event)">
-          <label class="custom-file-label" for="customFile">{{fileName}}</label>
+          <label class="custom-file-label  form-control-sm" for="customFile">{{fileName}}</label>
         </div>
         <div *ngIf="formSubmitted && form.file.errors" class="invalid-feedback">
           <div *ngIf="form.file.errors.required">File is required</div>
         </div>
       </div>
-      <button type="submit" class="btn btn-primary" [disabled]="formSubmitting">Upload</button>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="formSubmitting">Upload</button>
     </form>
   </div>
 </div>

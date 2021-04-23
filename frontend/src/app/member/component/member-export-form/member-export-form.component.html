@@ -1,0 +1,16 @@
+<div #memberFormContainer="ngbCollapse" [(ngbCollapse)]="collapsed" (shown)="onFormShown()" (hidden)="onFormHidden()"
+  class="collapse mt-3" id="memberFormContainer">
+  <div class="card card-body">
+    <form (submit)="onSubmit($event, exportCriteriaList.value)">
+
+      <div class="form-group">
+        <label for="memberCarModel">Criteria</label>
+        <select class="form-control form-control-sm" id="sortMode" #exportCriteriaList>
+          <option *ngFor="let criteria of criterias | async" [value]="criteria.code">{{criteria.text}}</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="formSubmitting">Export</button>
+
+    </form>
+  </div>
+</div>
