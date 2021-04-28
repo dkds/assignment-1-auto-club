@@ -22,7 +22,7 @@ export class ApolloService {
       cache: new InMemoryCache({
         resultCaching: false
       }),
-      link: new HttpLink({ uri: 'http://localhost:5000/graphql', fetch }),
+      link: new HttpLink({ uri: 'http://localhost:3000/graphql', fetch }),
       defaultOptions
     });
   }

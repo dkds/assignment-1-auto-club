@@ -1,28 +1,16 @@
 import { Injectable } from "@angular/core";
 import { createEffect, ofType, Actions } from "@ngrx/effects";
-import { of } from "rxjs";
-import { mergeMap, map, catchError } from "rxjs/operators";
+import { of, from } from "rxjs";
+import { mergeMap, map, catchError, filter } from "rxjs/operators";
 import { MemberService } from "../../service/member.service";
-import { getExportCriteriaList, exportList, exportListError, exportListSuccess, importList, importListError, importListSuccess, listLoad, listLoadError, listLoadSuccess, listReload, save, saveError, saveSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listNavigate, listSort, listSearch } from "./member.actions";
+import { getExportCriteriaList, exportListRequest, exportListRequestError, exportListRequestSuccess, importList, importListError, importListSuccess, listLoad, listLoadError, listLoadSuccess, save, saveError, saveSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listNavigate, listSort, listSearch, remove, removeSuccess, removeError } from "./member.actions";
 
 @Injectable()
 export class MemberEffects {
 
   loadMembers = createEffect(() => this.actions.pipe(
     ofType(listLoad),
-    mergeMap(() => {
-      this.memberService.loadMemberList();
-      return this.memberService.getMembers()
-        .pipe(
-          map(memberPage => (listLoadSuccess({ ...memberPage }))),
-          catchError(() => of(listLoadError({ error: "member load failed" })))
-        );
-    })
-  ));
-
-  reloadMembers = createEffect(() => this.actions.pipe(
-    ofType(listReload),
-    mergeMap(() => of(this.memberService.refresh())
+    mergeMap(() => from(this.memberService.loadMemberList())
       .pipe(
         mergeMap(() => this.memberService.getMembers()
           .pipe(
@@ -36,7 +24,7 @@ export class MemberEffects {
 
   searchList = createEffect(() => this.actions.pipe(
     ofType(listSearch),
-    mergeMap(({ query }) => of(this.memberService.refresh({ query }))
+    mergeMap(({ query }) => from(this.memberService.loadMemberList({ query }))
       .pipe(
         mergeMap(() => this.memberService.getMembers()
           .pipe(
@@ -49,7 +37,7 @@ export class MemberEffects {
 
   sortList = createEffect(() => this.actions.pipe(
     ofType(listSort),
-    mergeMap(({ sortMode }) => of(this.memberService.refresh({ orderBy: sortMode }))
+    mergeMap(({ sortMode }) => from(this.memberService.loadMemberList({ orderBy: sortMode }))
       .pipe(
         mergeMap(() => this.memberService.getMembers()
           .pipe(
@@ -62,7 +50,7 @@ export class MemberEffects {
 
   navigateList = createEffect(() => this.actions.pipe(
     ofType(listNavigate),
-    mergeMap(({ first, offset }) => of(this.memberService.refresh({ first, offset }))
+    mergeMap(({ first, offset }) => from(this.memberService.loadMemberList({ first, offset }))
       .pipe(
         mergeMap(() => this.memberService.getMembers()
           .pipe(
@@ -76,6 +64,8 @@ export class MemberEffects {
   importMembers = createEffect(() => this.actions.pipe(
     ofType(importList),
     mergeMap(({ fileSource }) => {
+      console.log("file", fileSource);
+
       const formData = new FormData();
       formData.append("file", fileSource);
       return this.memberService.importFile(formData)
@@ -97,13 +87,13 @@ export class MemberEffects {
     })
   ));
 
-  exportMembers = createEffect(() => this.actions.pipe(
-    ofType(exportList),
+  exportMembersRequest = createEffect(() => this.actions.pipe(
+    ofType(exportListRequest),
     mergeMap(({ criteria, variables }) => {
       return this.memberService.requestExport(criteria, variables)
         .pipe(
-          map(response => (exportListSuccess({ jobId: response.jobId }))),
-          catchError(() => of(exportListError({ error: "member export failed" })))
+          map(response => (exportListRequestSuccess({ jobId: response.jobId }))),
+          catchError(() => of(exportListRequestError({ error: "member export request failed" })))
         );
     })
   ));
@@ -115,6 +105,17 @@ export class MemberEffects {
         .pipe(
           map(() => (saveSuccess())),
           catchError(() => of(saveError({ error: "member import failed" })))
+        );
+    })
+  ));
+
+  removeMember = createEffect(() => this.actions.pipe(
+    ofType(remove),
+    mergeMap(({ id }) => {
+      return this.memberService.deleteMember(id)
+        .pipe(
+          map(() => (removeSuccess())),
+          catchError(() => of(removeError({ error: "member remove failed" })))
         );
     })
   ));

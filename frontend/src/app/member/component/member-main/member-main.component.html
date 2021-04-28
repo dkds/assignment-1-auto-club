@@ -3,7 +3,7 @@
   <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
 
   <div class="row">
-    <div class="col-lg-4 col-md-6 col-sm-8">
+    <div class="col-lg-6 col-md-8 col-sm-8">
 
       <div class="row">
         <div class="col-12 mb-3">
@@ -37,7 +37,8 @@
           <member-form #memberFormContainer (formShown)="onFormShown()" (formHidden)="onFormHidden()"></member-form>
 
           <div class="input-group input-group-sm pt-3">
-            <input type="text" class="form-control" #search>
+            <input type="text" class="form-control" #search
+            (keydown.enter)="onSearch(search.value)">
             <div class="input-group-append">
               <button class="btn btn-outline-secondary" type="button" (click)="onSearch(search.value)">Search</button>
             </div>
@@ -89,8 +90,8 @@
         </div>
       </div>
 
-      <ngb-pagination class="d-flex justify-content-end pr-4 pt-3" *ngIf="totalMemberSize | async as total"
-        [collectionSize]="total" [pageSize]="pageSize" (pageChange)="onPageChange($event)">
+      <ngb-pagination class="d-flex justify-content-end pr-3 pt-3" *ngIf="totalMemberSize | async as total"
+        [collectionSize]="total" [pageSize]="pageSize" [maxSize]="6" (pageChange)="onPageChange($event)">
       </ngb-pagination>
 
     </div>

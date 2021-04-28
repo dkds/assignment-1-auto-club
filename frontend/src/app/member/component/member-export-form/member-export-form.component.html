@@ -1,7 +1,7 @@
 <div #memberFormContainer="ngbCollapse" [(ngbCollapse)]="collapsed" (shown)="onFormShown()" (hidden)="onFormHidden()"
   class="collapse mt-3" id="memberFormContainer">
   <div class="card card-body">
-    <form (submit)="onSubmit($event, exportCriteriaList.value)">
+    <form (submit)="onSubmit($event, exportCriteriaList.value, variable.value)">
 
       <div class="form-group">
         <label for="memberCarModel">Criteria</label>
@@ -9,8 +9,18 @@
           <option *ngFor="let criteria of criterias | async" [value]="criteria.code">{{criteria.text}}</option>
         </select>
       </div>
+
+      <div class="form-group">
+        <label for="memberCarModel">Parameter X</label>
+        <input type="text" class="form-control" #variable>
+      </div>
       <button type="submit" class="btn btn-primary btn-sm" [disabled]="formSubmitting">Export</button>
 
     </form>
   </div>
+  <ng-template #fileLink let-toast >
+    <div style="min-width: 200px;">
+      <label><a href="{{toast.context.fileURL}}" download="download" (click)="toast.context.onDownload(toast)">Download file</a></label>
+    </div>
+  </ng-template>
 </div>

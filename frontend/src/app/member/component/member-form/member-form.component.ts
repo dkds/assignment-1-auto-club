@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store';
 import { DateTime } from 'luxon';
 import { Observable, Subscription } from 'rxjs';
 import { CarModel } from 'src/app/core/model/car-model.model';
+import { listLoad } from 'src/app/core/state/car-model/car-model.actions';
 import { save } from 'src/app/core/state/member/member.actions';
 import { MemberForm } from '../../../core/model/member-form.model';
 import { Member } from '../../../core/model/member.model';
@@ -45,6 +46,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.store.dispatch(listLoad());
     this.subscriptions.add(
       this.store.select((state: any) => state.member.save.loading).subscribe((loading) => {
         console.log("state.member.save.loading", loading);

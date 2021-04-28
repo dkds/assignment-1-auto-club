@@ -1,18 +1,19 @@
 
 type Query {
-  carMakes: CarMakePage
-  carMake(id: ID): CarMakeView
+  carMakes: [CarMakeView]
+  carMakeByName(name: String!): CarMakeView
+  carMake(id: Int!): CarMakeView
 }
 
 type Mutation {
   createCarMake(carMakeInput: CarMakeInput): CarMakeView
+  createOrGetCarMake(carMakeInput: CarMakeInput): CarMakeView
   updateCarMake(carMakeInput: CarMakeInput): CarMakeView
-  deleteCarMake(id: ID): Int
+  deleteCarMake(id: Int!): CarMakeRemoveResponse
 }
 
-type CarMakePage  {
-    totalCount: Int
-    nodes: [CarMakeView]
+type CarMakeRemoveResponse  {
+    deletedCarMakeId: Int
 }
 
 type CarMakeView  {

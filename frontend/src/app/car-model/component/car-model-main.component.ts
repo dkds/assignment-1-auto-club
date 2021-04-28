@@ -4,7 +4,7 @@ import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { CarMake } from 'src/app/core/model/car-make.model';
-import { remove, save } from 'src/app/core/state/car-model/car-model.actions';
+import { listLoad, remove, save } from 'src/app/core/state/car-model/car-model.actions';
 import { CarModel } from '../../core/model/car-model.model';
 
 @Component({
@@ -51,6 +51,7 @@ export class CarModelComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.store.dispatch(listLoad());
     this.subscriptions.add(
       this.store.select((state: any) => state.carModel.save.loading).subscribe((loading) => {
         console.log("state.member.save.loading", loading);

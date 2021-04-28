@@ -5,10 +5,6 @@ export const listLoad = createAction(
     '[Car Model List/API] Load'
 );
 
-export const listReload = createAction(
-    '[Car Model List/API] Reload'
-);
-
 export const listLoadSuccess = createAction(
     '[Car Model List/API] Load Success',
     props<{ carModels: CarModel[] }>()

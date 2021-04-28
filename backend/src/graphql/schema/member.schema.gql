@@ -1,4 +1,3 @@
-"""Methods to use when ordering `Member`."""
 enum MembersOrderBy {
   NATURAL
   ID_ASC
@@ -24,26 +23,17 @@ enum MembersOrderBy {
 }
 
 type Query {
-  members(
-    """Only read the first `n` values of the set."""
-    first: Int
-
-    """
-    Skip the first `n` values from our `after` cursor, an alternative to cursor
-    based pagination. May not be used with `last`.
-    """
-    offset: Int
-
-    """The method to use when ordering `Member`."""
-    orderBy: MembersOrderBy
-  ): MemberPage
-  member(id: ID): MemberView
+  members(first: Int, offset: Int, query: String,orderBy: MembersOrderBy): MemberPage
+  membersByCarAgeMoreThan(age: Int): MemberPage
+  membersByCarAgeLessThan(age: Int): MemberPage
+  memberByName(firstName: String!, lastName: String!, vin: String!): MemberView
+  member(id: Int!): MemberView
 }
 
 type Mutation {
   createMember(memberInput: MemberInput): MemberView
   updateMember(memberInput: MemberInput): MemberView
-  deleteMember(id: ID): Int
+  deleteMember(id: Int!): MemberRemoveResponse
 }
 
 scalar Datetime
@@ -51,6 +41,10 @@ scalar Datetime
 type MemberPage  {
     totalCount: Int
     nodes: [MemberView]
+}
+
+type MemberRemoveResponse  {
+    deletedMemberId: Int
 }
 
 type MemberView  {
@@ -70,5 +64,5 @@ input MemberInput  {
     email: String!
     vin: String!
     mfd: Datetime!
-    carModel: CarModelInput!
+    carModelId: Int!
 }

@@ -16,10 +16,23 @@ export class CarModelResolver {
         return this.carModelService.list({ first, offset, orderBy });
     }
 
+    @Query('carModelByName')
+    async carModelByName(
+        @Args('name') name: string,
+        @Args('carMakeId') carMakeId: number) {
+        return this.carModelService.getByName(name, carMakeId);
+    }
+
     @Mutation('createCarModel')
     async createCarModel(
         @Args('carModelInput') carModelInput: CarModelInput) {
         return this.carModelService.create({ ...carModelInput });
+    }
+
+    @Mutation('createOrGetCarModel')
+    async createOrGetCarModel(
+        @Args('carModelInput') carModelInput: CarModelInput) {
+        return this.carModelService.getOrCreate({ ...carModelInput });
     }
 
     @Mutation('updateCarModel')

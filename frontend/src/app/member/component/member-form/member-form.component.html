@@ -36,7 +36,7 @@
         <select class="form-control form-control-sm" id="memberCarModel" formControlName="carModelId"
           [class.is-invalid]="formSubmitted && form.carModelId.errors">
           <option value="" disabled selected>Choose Car Model</option>
-          <option *ngFor="let carModel of carModelList | async" [ngValue]="carModel.id">{{carModel.name}}</option>
+          <option *ngFor="let carModel of carModelList | async" [ngValue]="carModel.id">{{carModel?.carMake?.name}} - {{carModel?.name}}</option>
         </select>
         <div *ngIf="formSubmitted && form.carModelId.errors" class="invalid-feedback">
           <div *ngIf="form.carModelId.errors.required">Car model is required</div>

@@ -1,11 +1,12 @@
-import { Component, EventEmitter, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { JobStatusService } from 'src/app/core/service/job-status.service';
-import { exportList, getExportCriteriaList } from 'src/app/core/state/member/member.actions';
+import { exportListRequest, exportListSuccess, getExportCriteriaList } from 'src/app/core/state/member/member.actions';
 import { ToastService } from 'src/app/shared/service/toast.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'member-export-form',
@@ -15,6 +16,7 @@ import { ToastService } from 'src/app/shared/service/toast.service';
 export class MemberExportFormComponent implements OnInit {
 
   @ViewChild("memberFormContainer") memberFormContainer!: NgbCollapse;
+  @ViewChild("fileLink") fileLink!: TemplateRef<any>;
   @Output("formShown") formShownEmitter = new EventEmitter();
   @Output("formHidden") formHiddenEmitter = new EventEmitter();
 
@@ -23,6 +25,7 @@ export class MemberExportFormComponent implements OnInit {
   formCollapsed = true;
   formSubmitting = false;
   collapsed = true;
+  // fileURL?: string;
   private subscriptions: Subscription = new Subscription();
 
   constructor(
@@ -58,7 +61,6 @@ export class MemberExportFormComponent implements OnInit {
           });
           this.jobStatus.connect(jobId, 'export').subscribe({
             next: (data) => {
-              console.log("component listener", data);
               progressToast.progressBar = {
                 type: "primary",
                 text: `exporting ${data.progress}%`,
@@ -73,6 +75,15 @@ export class MemberExportFormComponent implements OnInit {
                 text: 'Exporting done',
                 value: 100
               };
+              this.store.dispatch(exportListSuccess());
+              this.toastService.showTemplate(this.fileLink, {
+                fileURL: `${environment.apiHost}/export/download/${jobId}/csv`,
+                onDownload: (toast:any) => {
+                  toast.autohide = true;
+                }
+              },
+                { header: "Exporting done" }
+              );
             }
           });
         })
@@ -105,8 +116,8 @@ export class MemberExportFormComponent implements OnInit {
     }
   }
 
-  onSubmit(event: Event, criteria: string) {
+  onSubmit(event: Event, criteria: string, variable: string) {
     event.preventDefault()
-    this.store.dispatch(exportList({ criteria }));
+    this.store.dispatch(exportListRequest({ criteria, variables: { age: +variable } }));
   }
 }

@@ -5,7 +5,8 @@ import { ImportJobStatusGateway } from 'src/file-import/import-job-status.gatewa
 @Processor('queue-member-import-progress')
 export class MemberImportProgressProcessor {
 
-  constructor(private jobStatusGateway: ImportJobStatusGateway) { }
+  constructor(
+    private jobStatusGateway: ImportJobStatusGateway) { }
 
   @Process()
   async process(job: Job<{ jobId: string, total: number, completed: number }>) {

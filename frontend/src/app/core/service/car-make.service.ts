@@ -19,8 +19,8 @@ export class CarMakeService {
   loadCarMakes() {
     console.log("getting data");
     this.listQuery.valueChanges.subscribe((result: any) => {
-      console.log("initData", result);
-      const carMakes = result?.data?.allCarMakes?.nodes?.map((data: any) => CarMake.fromObject(data));
+      console.log("initDataCarMakes", result);
+      const carMakes = result?.data?.carMakes?.map((data: any) => CarMake.fromObject(data));
       this.carMakeSubject.next(carMakes);
     });
   }
@@ -50,6 +50,8 @@ export class CarMakeService {
   }
 
   deleteCarMake(id: number) {
+    console.log('delete', id);
+    
     return this.apollo.mutate({
       mutation: DELETE_CAR_MAKE,
       variables: { id }

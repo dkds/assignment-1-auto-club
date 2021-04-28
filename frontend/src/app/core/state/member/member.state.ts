@@ -13,7 +13,7 @@ export interface MemberListState {
 
 export interface MemberImportState {
     jobId: string | null;
-    fileSource: string | null;
+    fileSource: File | null;
     error: string | null;
     loading: boolean;
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
-import { BehaviorSubject, EMPTY, Observable, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { first, map, mergeAll } from 'rxjs/operators';
 import { CarModel } from '../model/car-model.model';
 import { LIST_CAR_MODEL, CREATE_CAR_MODEL, UPDATE_CAR_MODEL, DELETE_CAR_MODEL } from './graphql.schema';
@@ -11,23 +11,28 @@ import { LIST_CAR_MODEL, CREATE_CAR_MODEL, UPDATE_CAR_MODEL, DELETE_CAR_MODEL } 
 export class CarModelService {
 
   private carModelSubject: Subject<CarModel[]> = new BehaviorSubject([] as CarModel[]);
-  private listQuery: QueryRef<any> = this.apollo.watchQuery({ query: LIST_CAR_MODEL });
+  private listQuery: QueryRef<any> = this.apollo.watchQuery({
+    query: LIST_CAR_MODEL,
+    pollInterval: 60000
+  });
+  private subscription?: Subscription;
 
   constructor(private apollo: Apollo) {
   }
 
   loadCarModels() {
-    this.listQuery.valueChanges.subscribe((result: any) => {
-      console.log("initData", result);
+    if (this.subscription) {
+      return this.listQuery.refetch();
+    } else {
+      this.subscription = this.listQuery.valueChanges.subscribe((result: any) => {
+        console.log("initDataCarModels", result);
 
-      const carModels = result?.data?.allCarModels?.nodes;
+        const carModels = result?.data?.carModels;
 
-      this.carModelSubject.next(carModels);
-    });
-  }
-
-  refresh() {
-    return this.listQuery.refetch();
+        this.carModelSubject.next(carModels);
+      });
+      return Promise.resolve();
+    }
   }
 
   getCarModels(): Observable<CarModel[]> {
@@ -84,7 +89,6 @@ export class CarModelService {
     if (result.error) {
       return throwError(result.error);
     }
-    this.refresh();
     return EMPTY;
   }
 }

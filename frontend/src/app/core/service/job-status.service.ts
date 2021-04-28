@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import io from 'socket.io-client';
-import { fromEvent, Observable } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { fromEvent, merge, Observable } from 'rxjs';
+import { first, takeUntil } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -22,7 +22,6 @@ export class JobStatusService {
     socket.once('disconnect', () => {
       console.log('progress-listener disconnected', jobId);
     });
-    return fromEvent(socket, 'job-progress')
-      .pipe(takeUntil(fromEvent(socket, "job-finished")));
+    return fromEvent(socket, 'job-progress').pipe(takeUntil(fromEvent(socket, "job-finished")));
   }
 }

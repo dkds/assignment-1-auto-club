@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { JobStatusService } from '../../../core/service/job-status.service';
 import { ToastService } from '../../../shared/service/toast.service';
 import { Store } from '@ngrx/store';
-import { importList, listReload } from '../../../core/state/member/member.actions';
+import { exportListRequestSuccess, importList, importListSuccess, listLoad } from '../../../core/state/member/member.actions';
 import { filter } from 'rxjs/operators';
 
 @Component({
@@ -62,7 +62,7 @@ export class MemberImportFormComponent implements OnInit {
               console.log("component listener", data);
               progressToast.progressBar = {
                 type: "primary",
-                text: `importing ${data.progress}%`,
+                text: `importing ${data.progress.toFixed(1)}%`,
                 value: data.progress
               };
             },
@@ -71,10 +71,10 @@ export class MemberImportFormComponent implements OnInit {
               progressToast.autohide = true;
               progressToast.progressBar = {
                 type: "success",
-                text: 'importing done',
+                text: 'import compelted',
                 value: 100
               };
-              this.store.dispatch(listReload());
+              this.store.dispatch(listLoad());
             }
           });
         })
@@ -92,7 +92,9 @@ export class MemberImportFormComponent implements OnInit {
     }
     this.formSubmitted = true;
     if (this.importForm.valid) {
-      this.store.dispatch(importList(this.importForm.value.fileSource));
+      console.log('file submit', this.importForm.value.fileSource);
+
+      this.store.dispatch(importList({ fileSource: this.importForm.value.fileSource }));
     }
   }
 
@@ -117,13 +119,14 @@ export class MemberImportFormComponent implements OnInit {
 
   onFormHidden() {
     this.importForm.reset();
+    this.fileName = "Choose file";
     this.formSubmitted = false;
     this.formSubmitting = false;
   }
 
   private hideMemberImportForm() {
-    if (!this.memberImportFormContainer.collapsed) {
-      this.memberImportFormContainer.toggle();
+    if (!this.memberImportFormContainer?.collapsed) {
+      this.memberImportFormContainer?.toggle();
     }
   }
 }

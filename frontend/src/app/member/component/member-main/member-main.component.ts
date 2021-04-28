@@ -36,6 +36,15 @@ export class MemberComponent implements OnInit, OnDestroy {
         console.log('this.memberForm', this.memberForm, loading);
         if (!loading) {
           this.memberForm?.hide();
+          this.store.dispatch(listLoad());
+        }
+      })
+    );
+    this.subscriptions.add(
+      this.store.select((state: any) => state.member.save.loading).subscribe((loading) => {
+        this.listProcessing = loading;
+        if (!loading) {
+          this.store.dispatch(listLoad());
         }
       })
     );

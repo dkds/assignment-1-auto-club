@@ -32,7 +32,7 @@ export class ExportJobStatusGateway implements OnGatewayInit, OnGatewayConnectio
   }
 
   notifyFinish(jobId: string, data?: any) {
-    const client = this.notify(jobId, "job-finished", { jobId: jobId, data });
+    const client = this.notify(jobId, "job-finished", { jobId, ...data });
     if (client) {
       client.disconnect();
     }
@@ -44,7 +44,7 @@ export class ExportJobStatusGateway implements OnGatewayInit, OnGatewayConnectio
 
   private notify(jobId: string, event: string, data: any) {
     const client = this.getClient(jobId);
-    console.log("ws", 'notify', jobId, event, data);
+    // console.log("ws", 'notify', jobId, event, data);
     if (client) {
       client.emit(event, data);
     } else {

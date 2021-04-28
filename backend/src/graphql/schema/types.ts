@@ -39,7 +39,7 @@ export class CarMakeInput {
 export class CarModelInput {
     id?: number;
     name: string;
-    carMake: CarMakeInput;
+    carMakeId: number;
 }
 
 export class MemberInput {
@@ -49,46 +49,59 @@ export class MemberInput {
     email: string;
     vin: string;
     mfd: Datetime;
-    carModel: CarModelInput;
+    carModelId: number;
 }
 
 export abstract class IQuery {
-    abstract carMakes(): CarMakePage | Promise<CarMakePage>;
+    abstract carMakes(): CarMakeView[] | Promise<CarMakeView[]>;
 
-    abstract carMake(id?: string): CarMakeView | Promise<CarMakeView>;
+    abstract carMakeByName(name: string): CarMakeView | Promise<CarMakeView>;
 
-    abstract carModels(): CarModelPage | Promise<CarModelPage>;
+    abstract carMake(id: number): CarMakeView | Promise<CarMakeView>;
 
-    abstract carModel(id?: string): CarModelView | Promise<CarModelView>;
+    abstract carModels(): CarModelView[] | Promise<CarModelView[]>;
 
-    abstract members(first?: number, offset?: number, orderBy?: MembersOrderBy): MemberPage | Promise<MemberPage>;
+    abstract carModelByName(name: string, carMakeId: number): CarModelView | Promise<CarModelView>;
 
-    abstract member(id?: string): MemberView | Promise<MemberView>;
+    abstract carModel(id: number): CarModelView | Promise<CarModelView>;
+
+    abstract members(first?: number, offset?: number, query?: string, orderBy?: MembersOrderBy): MemberPage | Promise<MemberPage>;
+
+    abstract membersByCarAgeMoreThan(age?: number): MemberPage | Promise<MemberPage>;
+
+    abstract membersByCarAgeLessThan(age?: number): MemberPage | Promise<MemberPage>;
+
+    abstract memberByName(firstName: string, lastName: string, vin: string): MemberView | Promise<MemberView>;
+
+    abstract member(id: number): MemberView | Promise<MemberView>;
 }
 
 export abstract class IMutation {
     abstract createCarMake(carMakeInput?: CarMakeInput): CarMakeView | Promise<CarMakeView>;
 
+    abstract createOrGetCarMake(carMakeInput?: CarMakeInput): CarMakeView | Promise<CarMakeView>;
+
     abstract updateCarMake(carMakeInput?: CarMakeInput): CarMakeView | Promise<CarMakeView>;
 
-    abstract deleteCarMake(id?: string): number | Promise<number>;
+    abstract deleteCarMake(id: number): CarMakeRemoveResponse | Promise<CarMakeRemoveResponse>;
 
     abstract createCarModel(carModelInput?: CarModelInput): CarModelView | Promise<CarModelView>;
 
+    abstract createOrGetCarModel(carModelInput?: CarModelInput): CarModelView | Promise<CarModelView>;
+
     abstract updateCarModel(carModelInput?: CarModelInput): CarModelView | Promise<CarModelView>;
 
-    abstract deleteCarModel(id?: string): number | Promise<number>;
+    abstract deleteCarModel(id: number): CarModelRemoveResponse | Promise<CarModelRemoveResponse>;
 
     abstract createMember(memberInput?: MemberInput): MemberView | Promise<MemberView>;
 
     abstract updateMember(memberInput?: MemberInput): MemberView | Promise<MemberView>;
 
-    abstract deleteMember(id?: string): number | Promise<number>;
+    abstract deleteMember(id: number): MemberRemoveResponse | Promise<MemberRemoveResponse>;
 }
 
-export class CarMakePage {
-    totalCount?: number;
-    nodes?: CarMakeView[];
+export class CarMakeRemoveResponse {
+    deletedCarMakeId?: number;
 }
 
 export class CarMakeView {
@@ -96,9 +109,8 @@ export class CarMakeView {
     name: string;
 }
 
-export class CarModelPage {
-    totalCount?: number;
-    nodes?: CarModelView[];
+export class CarModelRemoveResponse {
+    deletedCarModelId?: number;
 }
 
 export class CarModelView {
@@ -110,6 +122,10 @@ export class CarModelView {
 export class MemberPage {
     totalCount?: number;
     nodes?: MemberView[];
+}
+
+export class MemberRemoveResponse {
+    deletedMemberId?: number;
 }
 
 export class MemberView {

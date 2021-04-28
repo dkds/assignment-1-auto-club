@@ -51,7 +51,7 @@ export class MinioClientService {
         return {
             name: fileName,
             fileName: fullName,
-            url: `${config.MINIO_ENDPOINT}:${config.MINIO_PORT}/${config.MINIO_BUCKET}/${fullName}`
+            url: `http://${config.MINIO_ENDPOINT}:${config.MINIO_PORT}/${config.MINIO_BUCKET}/${fullName}`
         }
     }
 

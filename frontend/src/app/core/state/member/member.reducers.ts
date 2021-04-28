@@ -1,6 +1,7 @@
+import { nullSafeIsEquivalent } from '@angular/compiler/src/output/output_ast';
 import { on } from '@ngrx/store';
 import { createImmerReducer } from 'ngrx-immer/store';
-import { listSort, listNavigate, listLoadSuccess, listLoadError, remove, removeSuccess, removeError, importList, importListSuccess, importListError, save, saveError, saveSuccess, exportList, exportListError, exportListSuccess, getExportCriteriaList, getExportCriteriaListSuccess, getExportCriteriaListError, listSearch } from './member.actions';
+import { listSort, listNavigate, listLoadSuccess, listLoadError, remove, removeSuccess, removeError, importList, importListSuccess, importListError, save, saveError, saveSuccess, exportListRequest, exportListRequestError, exportListRequestSuccess, getExportCriteriaList, getExportCriteriaListSuccess, getExportCriteriaListError, listSearch, exportListSuccess } from './member.actions';
 import { MemberExportState, MemberImportState, MemberListState, MemberRemoveState, MemberSaveState } from './member.state';
 
 export const initialMemberListState: MemberListState = {
@@ -96,21 +97,28 @@ export const memberImportReducer = createImmerReducer(
 
 export const memberExportReducer = createImmerReducer(
     initialMemberExportState,
-    on(exportList, (state, { criteria, variables }) => {
+    on(exportListRequest, (state, { criteria, variables }) => {
         state.criteria = criteria;
         state.variables = variables;
         state.loading = true;
         return state;
     }),
-    on(exportListSuccess, (state, { jobId }) => {
+    on(exportListRequestSuccess, (state, { jobId }) => {
         state.jobId = jobId;
         state.criteria = null;
         state.variables = null;
         state.loading = false;
         return state;
     }),
-    on(exportListError, (state, { error }) => {
+    on(exportListRequestError, (state, { error }) => {
         state.error = error;
+        state.criteria = null;
+        state.variables = null;
+        state.loading = false;
+        return state;
+    }),
+    on(exportListSuccess, (state) => {
+        state.jobId = null;
         state.criteria = null;
         state.variables = null;
         state.loading = false;

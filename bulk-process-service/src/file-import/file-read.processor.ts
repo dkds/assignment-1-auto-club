@@ -31,7 +31,7 @@ export class FileReadWorker {
     const [data, errors] = this.getData(workbook);
     console.log(errors);
 
-    const rows = data.slice(0, 10);
+    const rows = data;
     console.log('rows', rows.length);
 
     from(rows)
@@ -68,7 +68,7 @@ export class FileReadWorker {
           rowData.email = row.values[4];
           rowData.carMake = row.values[5];
           rowData.carModel = row.values[6];
-          rowData.vinNumber = row.values[7];
+          rowData.vin = row.values[7];
           rowData.mfd = row.values[8];
           data.push(rowData);
         } catch (error) {

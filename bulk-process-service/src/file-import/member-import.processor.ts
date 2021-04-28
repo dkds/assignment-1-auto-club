@@ -1,6 +1,6 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { from, of } from 'rxjs';
+import { from, of, throwError } from 'rxjs';
 import { mergeMap, tap, toArray } from 'rxjs/operators';
 import { DataRow } from 'src/core/model/data-row.model';
 import { GraphQLService } from '../core/service/graphql.service';
@@ -22,46 +22,45 @@ export class MemberImportWorker {
 
     console.log('processing', 'queue-member-import', jobId, index);
 
-    await from(members).pipe(
+    const result = await from(members).pipe(
       mergeMap((member: DataRow) => {
-        return this.graphqlService.getCarMake(member.carMake)
+        return this.graphqlService.createOrGetCarMake(member.carMake)
           .pipe(
             mergeMap((carMake: any) => {
               if (carMake.error) {
-                return this.graphqlService.createCarMake(member.carMake);
+                return throwError(`Failed to create car make: ${member.carMake}`);
               }
-              return of(carMake);
-            }),
-            mergeMap((carMake: any) => {
               member.carMake = carMake;
               return of(member);
-            })
+            }),
           )
       }),
       mergeMap((member: any) => {
-        return this.graphqlService.getCarModel(member.carModel, member.carMake.id)
+        return this.graphqlService.createOrGetCarModel(member.carModel, member.carMake.id)
           .pipe(
             mergeMap((carModel: any) => {
               if (carModel.error) {
-                return this.graphqlService.createCarModel(member.carModel, member.carMake.id);
+                return throwError(`Failed to create car model: ${member.carModel}`);
               }
-              return of(carModel);
-            }),
-            mergeMap((carModel: any) => {
               member.carModel = carModel;
               return of(member);
-            })
+            }),
           )
       }),
       mergeMap((member: any) => {
-        return this.graphqlService.getMember(member.firstName, member.lastName, member.vinNumber)
+        return this.graphqlService.getMember(member.firstName, member.lastName, member.vin)
           .pipe(
-            mergeMap((member: any) => {
-              if (member.error) {
-                return this.graphqlService.createMember({ ...member, carModelId: member.carModel.id });
+            mergeMap((data: any) => {
+              if (data.error) {
+                return from(this.graphqlService.createMember({ ...member, carModelId: member.carModel.id }))
+                  .pipe(
+                    tap((data: any) => {
+                      if (data.error) throw new Error(`Failed to create member: ${member.firstName} ${member.lastName}`);
+                    })
+                  );
               }
-              return of(member);
-            })
+              return of(data);
+            }),
           )
       }),
       tap(() => {
@@ -70,10 +69,8 @@ export class MemberImportWorker {
       toArray()
     ).toPromise();
 
-    // this.importProgress.update(jobId, members.length);
-
     const returnValue = { index };
-    console.log('return - ', 'queue-member-import', returnValue);
+    console.log('completed - ', 'queue-member-import', returnValue);
 
     return returnValue;
   }

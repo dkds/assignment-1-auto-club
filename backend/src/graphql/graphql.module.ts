@@ -28,6 +28,9 @@ import { MemberService } from "./service/member.service";
         outputAs: 'class',
       },
     }),
+  ],
+  exports: [
+    ApolloService,
   ]
 })
 export class GraphQLModule {

@@ -7,6 +7,6 @@ export class DataRow {
     email: string;
     carMake: string;
     carModel: string;
-    vinNumber: string;
+    vin: string;
     mfd: string;
 }

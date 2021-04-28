@@ -1,173 +1,162 @@
-import { HttpService, Injectable } from '@nestjs/common';
-import { Observable, of } from 'rxjs';
-import { catchError, first, map, mergeMap, pluck } from 'rxjs/operators';
+import { Injectable } from '@nestjs/common';
+import { from, of, throwError } from 'rxjs';
+import { catchError, first, map, mergeMap, pluck, tap } from 'rxjs/operators';
+import { ApolloService } from './apollo.service';
 import {
-    CREATE_CAR_MAKE,
-    CREATE_CAR_MODEL,
-    CREATE_MEMBER,
-    GET_CAR_MAKE_BY_ID,
-    GET_CAR_MAKE_BY_NAME,
-    GET_CAR_MODEL_BY_ID,
-    GET_CAR_MODEL_BY_NAME,
-    GET_MEMBERS,
-    GET_MEMBER_BY_NAME
+  CREATE_CAR_MAKE,
+  CREATE_CAR_MODEL,
+  CREATE_MEMBER,
+  GET_CAR_MAKE_BY_ID,
+  CREATE_OR_GET_CAR_MAKE,
+  GET_CAR_MODEL_BY_ID,
+  CREATE_OR_GET_CAR_MODEL,
+  GET_MEMBERS,
+  GET_MEMBER_BY_NAME
 } from './graphql-queries.schema';
 
-const GRAPHQL_API_ENDPOINT = 'http://localhost:5000/graphql';
-const REQUEST_CONFIG = {
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-    }
-};
 
 @Injectable()
 export class GraphQLService {
 
-    constructor(private readonly httpService: HttpService) { }
+  constructor(
+    private readonly apolloService: ApolloService) { }
 
-    createMember(member: {
-        firstName: string,
-        lastName: string,
-        email: string,
-        vinNumber: string,
-        mfd: string,
-        carModelId: number
-    }) {
-        const data = CREATE_MEMBER;
-        data.variables = member;
+  createMember(member: {
+    firstName: string,
+    lastName: string,
+    email: string,
+    vin: string,
+    mfd: string,
+    carModelId: number
+  }) {
+    return from(this.apolloService.mutate({
+      mutation: CREATE_MEMBER,
+      variables: { ...member }
+    })).pipe(
+      pluck('data', 'createMember'),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data'),
-                map((data: any) => data.createMember.member)
-            );
-    }
+  createCarMake(name: string) {
+    return from(this.apolloService.mutate({
+      mutation: CREATE_CAR_MAKE,
+      variables: { name }
+    })).pipe(
+      pluck('data', 'createCarMake'),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-    createCarMake(name: string) {
-        const data = CREATE_CAR_MAKE;
-        data.variables.name = name;
+  createCarModel(name: string, carMakeId: number) {
+    return from(this.apolloService.mutate({
+      mutation: CREATE_CAR_MODEL,
+      variables: { name, carMakeId }
+    })).pipe(
+      pluck('data', 'createCarModel'),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data'),
-                map((data: any) => data.createCarMake.carMake)
-            );
-    }
+  getCarMakeById(id: number) {
+    return from(this.apolloService.query({
+      query: GET_CAR_MAKE_BY_ID,
+      variables: { id }
+    })).pipe(
+      pluck('data', 'data', 'carMakeById'),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-    createCarModel(name: string, carMakeId: number) {
-        const data = CREATE_CAR_MODEL;
-        data.variables.name = name;
-        data.variables.carMakeId = carMakeId;
+  createOrGetCarMake(name: string) {
+    return from(this.apolloService.mutate({
+      mutation: CREATE_OR_GET_CAR_MAKE,
+      variables: { name: `${name}` }
+    })).pipe(
+      pluck('data', 'createOrGetCarMake'),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      }),
+    );
+  }
 
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data'),
-                map((data: any) => data.createCarModel.carModel)
-            );
-    }
+  getCarModelById(id: number) {
+    return from(this.apolloService.query({
+      query: GET_CAR_MODEL_BY_ID,
+      variables: { id }
+    })).pipe(
+      pluck('data', 'data', 'carMakeById'),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-    getCarMakeById(id: number) {
-        const data = GET_CAR_MAKE_BY_ID;
-        data.variables.id = id;
+  createOrGetCarModel(name: string, carMakeId: number) {
+    return from(this.apolloService.mutate({
+      mutation: CREATE_OR_GET_CAR_MODEL,
+      variables: { name: `${name}`, carMakeId }
+    })).pipe(
+      pluck('data', 'createOrGetCarModel'),
+      mergeMap((data) => data == null ? throwError("not found") : of(data)),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data', 'carMakeById'),
-                catchError(error => {
-                    return of({ error: true, body: error.response.data });
-                })
-            );
-    }
+  getMember(firstName: string, lastName: string, vin: string) {
+    return from(this.apolloService.query({
+      query: GET_MEMBER_BY_NAME,
+      variables: { firstName, lastName, vin }
+    })).pipe(
+      pluck('data', 'memberByName'),
+      mergeMap((data) => data == null ? throwError("not found") : of(data)),
+      catchError(error => {
+        return of({ error: true, body: error?.response?.data });
+      })
+    );
+  }
 
-    getCarMake(name: string) {
-        const data = GET_CAR_MAKE_BY_NAME;
-        data.variables.name = name;
+  getMembersByQuery(query: any, variables: any) {
+    return from(this.apolloService.query({
+      query,
+      variables
+    })).pipe(
+      tap((data) => console.log('before', data)),
+      pluck('data'),
+      map((data) => {
+        for (const key in data) {
+          if (data.hasOwnProperty(key) && data[key].nodes) {
+            return data[key].nodes;
+          }
+        }
+      }),
+      catchError(error => {
+        return of({ error: true, body: error.response.data });
+      }),
+      tap((data) => console.log('after', data)),
+    );
+  }
 
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data'),
-                mergeMap((data: any) => data.allCarMakes.nodes),
-                first(),
-                catchError(error => {
-                    return of({ error: true, body: error });
-                })
-            );
-    }
-
-    getCarModelById(id: number) {
-        const data = GET_CAR_MODEL_BY_ID;
-        data.variables.id = id;
-
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data', 'carModelById'),
-                catchError(error => {
-                    return of({ error: true, body: error.response.data });
-                })
-            );
-    }
-
-    getCarModel(name: string, carMakeId: number) {
-        const data = GET_CAR_MODEL_BY_NAME;
-        data.variables.name = name;
-        data.variables.carMakeId = carMakeId;
-
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data'),
-                mergeMap((data: any) => data.allCarModels.nodes),
-                first(),
-                catchError(error => {
-                    return of({ error: true, body: error });
-                })
-            );
-    }
-
-    getMember(firstName: string, lastName: string, vin: string) {
-        const data = GET_MEMBER_BY_NAME;
-        data.variables.firstName = firstName;
-        data.variables.lastName = lastName;
-        data.variables.vin = vin;
-
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data'),
-                mergeMap((data: any) => data.allMembers.nodes),
-                first(),
-                catchError(error => {
-                    return of({ error: true, body: error });
-                })
-            );
-    }
-
-    getMembers(variables: any) {
-        console.log('variables', variables);
-
-        const data = GET_MEMBERS;
-        data.variables = variables;
-
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data', 'allMembers', 'nodes'),
-                catchError(error => {
-                    return of({ error: true, body: error });
-                })
-            );
-    }
-    
-    getMembersByAge(variables: any) {
-        console.log('variables', variables);
-
-        const data = GET_MEMBERS;
-        data.variables = variables;
-
-        return this.httpService.post(GRAPHQL_API_ENDPOINT, data, REQUEST_CONFIG)
-            .pipe(
-                pluck('data', 'data', 'allMembers', 'nodes'),
-                catchError(error => {
-                    return of({ error: true, body: error });
-                })
-            );
-    }
+  getMembersByAge(variables: any) {
+    return from(this.apolloService.query({
+      query: GET_MEMBERS,
+      variables: { ...variables }
+    })).pipe(
+      pluck('data', 'data', 'carMakeById'),
+      first(),
+      catchError(error => {
+        return of({ error: true, body: error.response.data });
+      })
+    );
+  }
 }

@@ -14,6 +14,24 @@ export class MinioClientService {
     }
 
     constructor(private readonly minio: MinioService) {
+        minio.client.bucketExists(this.baseBucket, (err, exists) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            if (exists) {
+                console.log('Bucket found successfully.', this.baseBucket)
+            } else {
+                minio.client.makeBucket(this.baseBucket, (err) => {
+                    if (err) {
+                        console.log('Error creating bucket.', this.baseBucket, err)
+                        return;
+                    } else {
+                        console.log('Bucket created successfully.', this.baseBucket)
+                    }
+                })
+            }
+        });
     }
 
     public async get(fileName: string, baseBucket: string = this.baseBucket): Promise<Stream> {

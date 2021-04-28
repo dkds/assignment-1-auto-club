@@ -12,7 +12,7 @@ export class ExportProgressService {
   }
 
   init(jobId: string, total: number) {
-    this.jobProgress[jobId] = { total, completed: 0 };
+    this.jobProgress[jobId] = { total: total++, completed: 0 };
     console.log('jobProgress', 'init', jobId, total, this.jobProgress);
     this.memberExportProgress.add({ jobId, ...this.jobProgress[jobId] })
   }
@@ -20,7 +20,12 @@ export class ExportProgressService {
   increment(jobId: string) {
     const progressDetails = this.jobProgress[jobId];
     progressDetails.completed++;
-    console.log('jobProgress', 'update', jobId, progressDetails);
     this.memberExportProgress.add({ jobId, ...progressDetails })
+  }
+
+  finish(jobId: string, returnValue: any) {
+    const progressDetails = this.jobProgress[jobId];
+    progressDetails.completed = progressDetails.total;
+    this.memberExportProgress.add({ jobId, ...progressDetails, returnValue })
   }
 }

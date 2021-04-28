@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Apollo, QueryRef } from 'apollo-angular';
-import { BehaviorSubject, EMPTY, Observable, Subject, throwError } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MemberPage } from '../model/member-page.model';
 import { Member } from '../model/member.model';
@@ -15,27 +15,32 @@ import { environment } from '../../../environments/environment';
 export class MemberService {
 
   private memberSubject: Subject<MemberPage> = new BehaviorSubject(new MemberPage([], 0));
-  private listQuery: QueryRef<any, { first: number, offset: number, orderBy: string }> =
-    this.apollo.watchQuery({ query: LIST_MEMBERS, variables: { first: 5, offset: 0, orderBy: "NATURAL" } });
+  private listQuery: QueryRef<any, { first: number, offset: number, query: string, orderBy: string }> =
+    this.apollo.watchQuery({
+      query: LIST_MEMBERS, variables: { first: 5, offset: 0, query: '*', orderBy: "NATURAL" },
+      pollInterval: 60000,
+    });
+  private subscription?: Subscription;
 
   constructor(
     private apollo: Apollo,
     private httpClient: HttpClient) {
   }
 
-  loadMemberList() {
-    this.listQuery.valueChanges.subscribe((result: any) => {
-      console.log("initData", result);
+  loadMemberList(variables?: any) {
+    if (this.subscription) {
+      return this.listQuery.refetch(variables);
+    } else {
+      this.subscription = this.listQuery.valueChanges.subscribe((result: any) => {
+        console.log("initData", result);
 
-      const total = result?.data?.members?.totalCount;
-      const members = result?.data?.members?.nodes;
+        const total = result?.data?.members?.totalCount;
+        const members = result?.data?.members?.nodes;
 
-      this.memberSubject.next(new MemberPage(members, total));
-    });
-  }
-
-  refresh(variables?: any) {
-    return this.listQuery.refetch(variables);
+        this.memberSubject.next(new MemberPage(members, total));
+      });
+      return Promise.resolve();
+    }
   }
 
   getMembers(): Observable<MemberPage> {
@@ -50,10 +55,10 @@ export class MemberService {
     }
   }
 
-  deleteMember(member: Member) {
+  deleteMember(id: number) {
     return this.apollo.mutate({
       mutation: DELETE_MEMBER,
-      variables: member
+      variables: { id }
     }).pipe(map((result: any) => {
       console.log("deleteMember", result);
       return this.responseHandler(result);
@@ -96,7 +101,6 @@ export class MemberService {
     if (result.error) {
       return throwError(result.error);
     }
-    this.refresh();
     return EMPTY;
   }
 }

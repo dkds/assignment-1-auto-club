@@ -1,34 +1,34 @@
 import { Injectable, TemplateRef } from '@angular/core';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
 export class ToastService {
 
-    toasts: any[] = [];
+  toasts: any[] = [];
 
-    showTemplate(template: TemplateRef<any>, options: any = {}) {
-        const size = this.toasts.push({ template, ...options });
-        console.log("show toast", size);
+  showTemplate(template: TemplateRef<any>, context: any, options: any = {}) {
+    const size = this.toasts.push({ template, context, ...options });
+    console.log("show toast", size);
 
-        return this.toasts[size - 1];
-    }
+    return this.toasts[size - 1];
+  }
 
-    showText(text: string, options: any = {}) {
-        const size = this.toasts.push({ text, ...options });
-        console.log("show toast", size);
+  showText(text: string, options: any = {}) {
+    const size = this.toasts.push({ text, ...options });
+    console.log("show toast", size);
 
-        return this.toasts[size - 1];
-    }
+    return this.toasts[size - 1];
+  }
 
-    showProgress(options: any = {}) {
-        const size = this.toasts.push({ ...options });
-        console.log("show toast", size);
+  showProgress(options: any = {}) {
+    const size = this.toasts.push({ ...options });
+    console.log("show toast", size);
 
-        return this.toasts[size - 1];
-    }
+    return this.toasts[size - 1];
+  }
 
-    remove(toast: any) {
-        this.toasts = this.toasts.filter(t => t !== toast);
-    }
+  remove(toast: any) {
+    this.toasts = this.toasts.filter(t => t !== toast);
+  }
 }

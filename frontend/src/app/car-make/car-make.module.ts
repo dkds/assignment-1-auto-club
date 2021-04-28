@@ -12,16 +12,8 @@ import { carMakeListReducer, carMakeRemoveReducer, carMakeSaveReducer } from '..
 import { CarMakeEffects } from '../core/state/car-make/car-make.effects';
 
 
-const routes: Routes = [
-  {
-    path: '',
-    component: CarMakeComponent
-  }
-];
-
 @NgModule({
   imports: [
-    RouterModule.forChild(routes),
     CommonModule,
     ReactiveFormsModule,
     NgbCollapseModule,

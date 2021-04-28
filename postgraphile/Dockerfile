@@ -1,5 +1,7 @@
-FROM graphile/postgraphile:4-11
+FROM node:14.16.1-alpine3.13
 
-RUN yarn add postgraphile-plugin-connection-filter
+WORKDIR /usr/project/postgraphile
+COPY . .
+RUN npm install
 
-ENTRYPOINT ["./cli.js"]
+ENTRYPOINT ["node", "index.js"]

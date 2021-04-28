@@ -20,10 +20,6 @@ export const listLoad = createAction(
     '[Member List/API] Load'
 );
 
-export const listReload = createAction(
-    '[Member List/API] Reload'
-);
-
 export const listLoadSuccess = createAction(
     '[Member List/API] Load Success',
     props<{ members: Member[], totalCount: number }>()
@@ -50,7 +46,7 @@ export const removeError = createAction(
 
 export const importList = createAction(
     '[Member List Import/API] Import',
-    props<{ fileSource: string }>()
+    props<{ fileSource: File }>()
 );
 
 export const importListSuccess = createAction(
@@ -61,11 +57,6 @@ export const importListSuccess = createAction(
 export const importListError = createAction(
     '[Member List Import/API] Import Error',
     props<{ error: string }>()
-);
-
-export const exportList = createAction(
-    '[Member List Export/API] Export',
-    props<{ criteria: string, variables?: any }>()
 );
 
 export const getExportCriteriaList = createAction(
@@ -81,14 +72,23 @@ export const getExportCriteriaListError = createAction(
     props<{ error: string }>()
 );
 
-export const exportListSuccess = createAction(
-    '[Member List Export/API] Export Success',
+export const exportListRequest = createAction(
+    '[Member List Export/API] Export Request',
+    props<{ criteria: string, variables?: any }>()
+);
+
+export const exportListRequestSuccess = createAction(
+    '[Member List Export/API] Export Request Success',
     props<{ jobId: string }>()
 );
 
-export const exportListError = createAction(
-    '[Member List Export/API] Export Error',
+export const exportListRequestError = createAction(
+    '[Member List Export/API] Export Request Error',
     props<{ error: string }>()
+);
+
+export const exportListSuccess = createAction(
+    '[Member List Export/API] Export Success'
 );
 
 export const save = createAction(

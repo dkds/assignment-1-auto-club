@@ -26,25 +26,23 @@ services:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
     volumes:
-      - ./db/file-store:/data
+      - minio:/data
     command: server /data
 
   postgraphile:
-    image: postgraphile
+    image: postgraphile-service
     ports:
       - 5000:5000
     depends_on:
       - postgres
     build:
       context: ./postgraphile
-    command: [
-       "--append-plugins", "postgraphile-plugin-connection-filter", 
-       "--connection", "postgres://postgres:example@postgres:5432/postgres", 
-       "--schema", "public", 
-       "--cors", 
-       "--retry-on-init-fail"
-    ]
+    environment:
+      DATABASE_URL: postgres://postgres:example@postgres:5432/postgres
+      PORT: 5000
 
 volumes:
   postgres:
+    driver: local
+  minio:
     driver: local
