@@ -131,7 +131,6 @@ export class GraphQLService {
       query,
       variables
     })).pipe(
-      tap((data) => console.log('before', data)),
       pluck('data'),
       map((data) => {
         for (const key in data) {
@@ -143,7 +142,6 @@ export class GraphQLService {
       catchError(error => {
         return of({ error: true, body: error.response.data });
       }),
-      tap((data) => console.log('after', data)),
     );
   }
 

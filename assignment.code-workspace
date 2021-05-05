@@ -7,9 +7,6 @@
 			"path": "backend"
 		},
 		{
-			"path": "db"
-		},
-		{
 			"path": "frontend"
 		},
 		{

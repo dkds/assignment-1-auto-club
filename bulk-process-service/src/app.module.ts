@@ -10,7 +10,7 @@ import { FileExportModule } from './file-export/file-export.module';
   ],
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '../config/.env',
+      envFilePath: '.env',
       isGlobal: true,
     }),
     BullModule.forRoot({

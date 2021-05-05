@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
@@ -30,6 +31,7 @@ export class CarModelComponent implements OnInit, OnDestroy {
   subscriptions: Subscription = new Subscription();
 
   constructor(
+    private logger: NGXLogger,
     private store: Store,
     private formBuilder: FormBuilder) {
   }
@@ -54,7 +56,7 @@ export class CarModelComponent implements OnInit, OnDestroy {
     this.store.dispatch(listLoad());
     this.subscriptions.add(
       this.store.select((state: any) => state.carModel.save.loading).subscribe((loading) => {
-        console.log("state.member.save.loading", loading);
+        this.logger.debug("state.member.save.loading", loading);
         this.carModelFormSubmitting = loading;
         if (!loading) {
           this.hideCarModelForm();
@@ -76,7 +78,7 @@ export class CarModelComponent implements OnInit, OnDestroy {
   }
 
   onCarModelFormSubmit() {
-    console.log(this.carModelForm.value);
+    this.logger.debug(this.carModelForm.value);
     if (this.carModelFormSubmitting) {
       return;
     }
@@ -108,7 +110,7 @@ export class CarModelComponent implements OnInit, OnDestroy {
     if (this.carModelFormSubmitting) {
       return;
     }
-    console.log("delete", carModel);
+    this.logger.debug("delete", carModel);
     if (confirm(`Are you sure you want to delete '${carModel.name}'`)) {
       this.form.name.disable();
       this.store.dispatch(remove({ id: carModel.id }));

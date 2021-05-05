@@ -1,13 +1,13 @@
-import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { MinioService } from 'nestjs-minio-client';
 import { config } from './minio.config'
 import { BufferedFile } from './file.model';
-import { getRandomCode } from 'src/core/util';
 import { Stream } from 'stream';
 
 @Injectable()
 export class MinioClientService {
-    private readonly baseBucket = config.MINIO_BUCKET
+    private readonly logger = new Logger(MinioClientService.name);
+    private readonly baseBucket = config.MINIO_BUCKET;
 
     public get client() {
         return this.minio.client;
@@ -20,7 +20,7 @@ export class MinioClientService {
         return new Promise((resolve, reject) => {
             this.client.getObject(baseBucket, fileName, (err, dataStream) => {
                 if (err) {
-                    console.log(err);
+                    this.logger.error(err);
                     reject(err);
                 }
                 resolve(dataStream);
@@ -40,7 +40,6 @@ export class MinioClientService {
             'X-Amz-Meta-Testing': 1234,
         };
         const fullName = fileName + ext;
-        console.log(fullName);
         const fileBuffer = file.buffer;
         this.client.putObject(baseBucket, fullName, fileBuffer, metaData, (err, res) => {
             if (err) {

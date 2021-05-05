@@ -1,9 +1,10 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bull';
 
 @Injectable()
 export class ImportProgressService {
+  private readonly logger = new Logger(ImportProgressService.name);
 
   private jobProgress: { [jobId: string]: { total: number, completed: number } } = {};
 
@@ -13,14 +14,14 @@ export class ImportProgressService {
 
   init(jobId: string, total: number) {
     this.jobProgress[jobId] = { total, completed: 0 };
-    console.log('jobProgress', 'init', jobId, total, this.jobProgress);
+    this.logger.log(`jobProgress init, ${jobId}, ${total}, ${this.jobProgress}`);
     this.memberImportProgress.add({ jobId, ...this.jobProgress[jobId] })
   }
 
   increment(jobId: string) {
     const progressDetails = this.jobProgress[jobId];
     progressDetails.completed++;
-    console.log('jobProgress', 'update', jobId, progressDetails);
+    this.logger.log(`jobProgress update, ${jobId}, ${progressDetails}`);
     this.memberImportProgress.add({ jobId, ...progressDetails })
   }
 }

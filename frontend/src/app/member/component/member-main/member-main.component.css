@@ -5,3 +5,8 @@
     right: 15px;
     clear: right;
 }
+
+.item-container {
+    max-height: 80vh;
+    overflow-y: auto;
+}

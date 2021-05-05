@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { Apollo, QueryRef } from 'apollo-angular';
-import { BehaviorSubject, EMPTY, Observable, Subject, throwError } from 'rxjs';
-import { first, map, mergeAll } from 'rxjs/operators';
+import { BehaviorSubject, EMPTY, Observable, of, Subject, throwError } from 'rxjs';
+import { first, map, mergeAll, mergeMap } from 'rxjs/operators';
 import { CarMake } from '../model/car-make.model';
 import { LIST_CAR_MAKE, CREATE_CAR_MAKE, UPDATE_CAR_MAKE, DELETE_CAR_MAKE } from './graphql.schema';
 
@@ -13,13 +14,15 @@ export class CarMakeService {
   private carMakeSubject: Subject<CarMake[]> = new BehaviorSubject([] as CarMake[]);
   private listQuery: QueryRef<any> = this.apollo.watchQuery({ query: LIST_CAR_MAKE });
 
-  constructor(private apollo: Apollo) {
+  constructor(
+    private logger: NGXLogger,
+    private apollo: Apollo) {
   }
 
   loadCarMakes() {
-    console.log("getting data");
+    this.logger.debug("getting data");
     this.listQuery.valueChanges.subscribe((result: any) => {
-      console.log("initDataCarMakes", result);
+      this.logger.debug("initDataCarMakes", result);
       const carMakes = result?.data?.carMakes?.map((data: any) => CarMake.fromObject(data));
       this.carMakeSubject.next(carMakes);
     });
@@ -50,13 +53,11 @@ export class CarMakeService {
   }
 
   deleteCarMake(id: number) {
-    console.log('delete', id);
-    
     return this.apollo.mutate({
       mutation: DELETE_CAR_MAKE,
       variables: { id }
-    }).pipe(map((result: any) => {
-      console.log("deleteCarMake", result);
+    }).pipe(mergeMap((result: any) => {
+      this.logger.debug("deleteCarMake", result);
       return this.responseHandler(result);
     }));
   }
@@ -65,8 +66,8 @@ export class CarMakeService {
     return this.apollo.mutate({
       mutation: CREATE_CAR_MAKE,
       variables: carMake
-    }).pipe(map((result: any) => {
-      console.log("createCarMake", result);
+    }).pipe(mergeMap((result: any) => {
+      this.logger.debug("createCarMake", result);
       return this.responseHandler(result);
     }));
   }
@@ -75,8 +76,8 @@ export class CarMakeService {
     return this.apollo.mutate({
       mutation: UPDATE_CAR_MAKE,
       variables: carMake
-    }).pipe(map((result: any) => {
-      console.log("updateCarMake", result);
+    }).pipe(mergeMap((result: any) => {
+      this.logger.debug("updateCarMake", result);
       return this.responseHandler(result);
     }));
   }
@@ -86,6 +87,6 @@ export class CarMakeService {
       return throwError(result.error);
     }
     this.refresh();
-    return EMPTY;
+    return of(result?.data);
   }
 }

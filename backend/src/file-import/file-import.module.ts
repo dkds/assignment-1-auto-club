@@ -1,9 +1,10 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { ImportJobStatusGateway } from 'src/file-import/import-job-status.gateway';
+import { ImportJobStatusGateway } from 'src/file-import/import-job-status-ws.gateway';
 import { GraphQLModule } from 'src/graphql/graphql.module';
 import { MinioClientModule } from 'src/minio-client/minio-client.module';
 import { FileImportController } from './file-import.controller';
+import { ImportJobStatusSCClient } from './import-job-status-sc.client';
 import { MemberImportProgressProcessor } from './member-import-progress.processor';
 
 @Module({
@@ -20,7 +21,8 @@ import { MemberImportProgressProcessor } from './member-import-progress.processo
   ],
   providers: [
     MemberImportProgressProcessor,
-    ImportJobStatusGateway
+    ImportJobStatusGateway,
+    ImportJobStatusSCClient
   ]
 })
 export class FileImportModule {

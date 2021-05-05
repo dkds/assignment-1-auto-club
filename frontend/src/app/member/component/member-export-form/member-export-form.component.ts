@@ -1,10 +1,11 @@
-import { Component, EventEmitter, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { Subscription } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { filter, mergeAll } from 'rxjs/operators';
 import { JobStatusService } from 'src/app/core/service/job-status.service';
-import { exportListRequest, exportListSuccess, getExportCriteriaList } from 'src/app/core/state/member/member.actions';
+import { exportListRequest, exportListRequestCompleted, exportListRequestListenerEnded, exportListRequestListenerStarted, getExportCriteriaList } from 'src/app/core/state/member/member.actions';
 import { ToastService } from 'src/app/shared/service/toast.service';
 import { environment } from '../../../../environments/environment';
 
@@ -13,7 +14,7 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './member-export-form.component.html',
   styleUrls: ['./member-export-form.component.css'],
 })
-export class MemberExportFormComponent implements OnInit {
+export class MemberExportFormComponent implements OnInit, OnDestroy {
 
   @ViewChild("memberFormContainer") memberFormContainer!: NgbCollapse;
   @ViewChild("fileLink") fileLink!: TemplateRef<any>;
@@ -25,10 +26,14 @@ export class MemberExportFormComponent implements OnInit {
   formCollapsed = true;
   formSubmitting = false;
   collapsed = true;
-  // fileURL?: string;
+  criteria: { code: string | null, variable: string | null } = {
+    code: null,
+    variable: null,
+  };
   private subscriptions: Subscription = new Subscription();
 
   constructor(
+    private logger: NGXLogger,
     private store: Store,
     private toastService: ToastService,
     private jobStatus: JobStatusService) { }
@@ -37,17 +42,17 @@ export class MemberExportFormComponent implements OnInit {
     this.store.dispatch(getExportCriteriaList());
     this.subscriptions.add(
       this.store.select((state: any) => state.member.export.loading).subscribe((loading) => {
-        console.log('state.member.export.loading', loading);
+        this.logger.debug('state.member.export.loading', loading);
         this.formSubmitting = loading;
       })
     );
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.export.jobId)
-        .pipe(filter((jobId: string) => jobId != null))
-        .subscribe((jobId: string) => {
+      this.store.select((state: any) => state.member.export.jobs as { jobId: string, listening: boolean }[])
+        .pipe(mergeAll(), filter(({ listening }) => !listening))
+        .subscribe(({ jobId }) => {
           this.hide();
 
-          console.log("response", jobId);
+          this.logger.debug("response", jobId);
 
           const progressToast = this.toastService.showProgress({
             progressBar: {
@@ -59,35 +64,44 @@ export class MemberExportFormComponent implements OnInit {
             },
             header: "Exporting members"
           });
-          this.jobStatus.connect(jobId, 'export').subscribe({
-            next: (data) => {
-              progressToast.progressBar = {
-                type: "primary",
-                text: `exporting ${data.progress}%`,
-                value: data.progress
-              };
-            },
-            complete: () => {
-              console.log("export complete");
-              progressToast.autohide = true;
-              progressToast.progressBar = {
-                type: "success",
-                text: 'Exporting done',
-                value: 100
-              };
-              this.store.dispatch(exportListSuccess());
-              this.toastService.showTemplate(this.fileLink, {
-                fileURL: `${environment.apiHost}/export/download/${jobId}/csv`,
-                onDownload: (toast:any) => {
-                  toast.autohide = true;
-                }
+          this.subscriptions.add(
+            this.jobStatus.connect(jobId, 'export').subscribe({
+              next: (data) => {
+                progressToast.progressBar = {
+                  type: "primary",
+                  text: `exporting ${data.progress}%`,
+                  value: data.progress
+                };
               },
-                { header: "Exporting done" }
-              );
-            }
-          });
+              complete: () => {
+                this.logger.debug("export complete");
+                progressToast.autohide = true;
+                progressToast.progressBar = {
+                  type: "success",
+                  text: 'Exporting done',
+                  value: 100
+                };
+                this.store.dispatch(exportListRequestCompleted({ jobId }));
+                this.toastService.showTemplate(this.fileLink, {
+                  fileURL: `${environment.apiHost}/export/download/${jobId}/csv`,
+                  onDownload: (toast: any) => {
+                    toast.autohide = true;
+                  }
+                },
+                  { header: "Exporting done" }
+                );
+              }
+            })
+          );
+          this.store.dispatch(exportListRequestListenerStarted({ jobId }));
         })
     );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+    this.store.dispatch(exportListRequestListenerEnded());
+    this.toastService.removeAll();
   }
 
   onFormShown() {
@@ -116,8 +130,10 @@ export class MemberExportFormComponent implements OnInit {
     }
   }
 
-  onSubmit(event: Event, criteria: string, variable: string) {
-    event.preventDefault()
-    this.store.dispatch(exportListRequest({ criteria, variables: { age: +variable } }));
+  onSubmit() {
+    if (this.criteria.code && this.criteria.variable) {
+      this.store.dispatch(exportListRequest({ criteria: this.criteria.code, variables: { age: +this.criteria.variable } }));
+      this.criteria = { code: null, variable: null }
+    }
   }
 }

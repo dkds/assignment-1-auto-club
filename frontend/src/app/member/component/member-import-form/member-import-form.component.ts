@@ -1,18 +1,19 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Subscription } from 'rxjs';
 import { JobStatusService } from '../../../core/service/job-status.service';
 import { ToastService } from '../../../shared/service/toast.service';
 import { Store } from '@ngrx/store';
-import { exportListRequestSuccess, importList, importListSuccess, listLoad } from '../../../core/state/member/member.actions';
-import { filter } from 'rxjs/operators';
+import { importListRequest, importListRequestListenerEnded, importListRequestListenerStarted, listLoad } from '../../../core/state/member/member.actions';
+import { filter, mergeAll, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'member-import-form',
   templateUrl: './member-import-form.component.html',
 })
-export class MemberImportFormComponent implements OnInit {
+export class MemberImportFormComponent implements OnInit, OnDestroy {
 
   @ViewChild("memberImportFormContainer") memberImportFormContainer!: NgbCollapse;
 
@@ -27,6 +28,7 @@ export class MemberImportFormComponent implements OnInit {
   subscriptions: Subscription = new Subscription();
 
   constructor(
+    private logger: NGXLogger,
     private store: Store,
     private toastService: ToastService,
     private formBuilder: FormBuilder,
@@ -35,17 +37,17 @@ export class MemberImportFormComponent implements OnInit {
   ngOnInit(): void {
     this.subscriptions.add(
       this.store.select((state: any) => state.member.import.loading).subscribe((loading) => {
-        console.log('state.member.import.loading', loading);
+        this.logger.debug('state.member.import.loading', loading);
         this.formSubmitting = loading;
       })
     );
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.import.jobId)
-        .pipe(filter((jobId: string) => jobId != null))
-        .subscribe((jobId: string) => {
+      this.store.select((state: any) => state.member.import.jobs as { jobId: string, listening: boolean }[])
+        .pipe(mergeAll(), filter(({ listening }) => !listening))
+        .subscribe(({ jobId }) => {
           this.hideMemberImportForm();
-
-          console.log("response", jobId);
+          
+          this.logger.debug("response", jobId);
 
           const progressToast = this.toastService.showProgress({
             progressBar: {
@@ -57,28 +59,37 @@ export class MemberImportFormComponent implements OnInit {
             },
             header: "Importing members"
           });
-          this.jobStatus.connect(jobId, 'import').subscribe({
-            next: (data) => {
-              console.log("component listener", data);
-              progressToast.progressBar = {
-                type: "primary",
-                text: `importing ${data.progress.toFixed(1)}%`,
-                value: data.progress
-              };
-            },
-            complete: () => {
-              console.log("import complete");
-              progressToast.autohide = true;
-              progressToast.progressBar = {
-                type: "success",
-                text: 'import compelted',
-                value: 100
-              };
-              this.store.dispatch(listLoad());
-            }
-          });
+          this.subscriptions.add(
+            this.jobStatus.connect(jobId, 'import').subscribe({
+              next: (data) => {
+                // this.logger.debug("component listener", data);
+                progressToast.progressBar = {
+                  type: "primary",
+                  text: `importing ${data.progress.toFixed(1)}%`,
+                  value: data.progress
+                };
+              },
+              complete: () => {
+                this.logger.debug("import complete");
+                progressToast.autohide = true;
+                progressToast.progressBar = {
+                  type: "success",
+                  text: 'import compelted',
+                  value: 100
+                };
+                this.store.dispatch(listLoad());
+              }
+            })
+          );
+          this.store.dispatch(importListRequestListenerStarted({ jobId }));
         })
     );
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.unsubscribe();
+    this.store.dispatch(importListRequestListenerEnded());
+    this.toastService.removeAll();
   }
 
   get form() {
@@ -86,15 +97,15 @@ export class MemberImportFormComponent implements OnInit {
   }
 
   onFormSubmit() {
-    console.log(this.importForm.value);
+    this.logger.debug(this.importForm.value);
     if (this.formSubmitting) {
       return;
     }
     this.formSubmitted = true;
     if (this.importForm.valid) {
-      console.log('file submit', this.importForm.value.fileSource);
+      this.logger.debug('file submit', this.importForm.value.fileSource);
 
-      this.store.dispatch(importList({ fileSource: this.importForm.value.fileSource }));
+      this.store.dispatch(importListRequest({ fileSource: this.importForm.value.fileSource }));
     }
   }
 

@@ -10,6 +10,5 @@ export class AppComponent {
   constructor() { }
 
   onHeaderLinkClick(action: string) {
-    console.log('sideBarOpen', action);
   }
 }

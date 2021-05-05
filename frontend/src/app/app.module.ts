@@ -4,9 +4,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { GraphQLModule } from './graphql.module';
 import { MemberModule } from './member/member.module';
 import { CoreModule } from './core/core.module';
+import { LoggerModule, NgxLoggerLevel } from "ngx-logger";
 
 import { AppComponent } from './app.component';
-import { JobStatusService } from './core/service/job-status.service';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { CarModelModule } from './car-model/car-model.module';
@@ -22,10 +22,11 @@ import { CarModelModule } from './car-model/car-model.module';
     CoreModule,
     MemberModule,
     CarModelModule,
+    LoggerModule.forRoot({ level: NgxLoggerLevel.DEBUG, serverLogLevel: NgxLoggerLevel.ERROR }),
     EffectsModule.forRoot([]),
     StoreModule.forRoot([])
   ],
-  providers: [JobStatusService],
+  providers: [],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

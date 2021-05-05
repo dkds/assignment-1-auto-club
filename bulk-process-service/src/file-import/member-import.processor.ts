@@ -1,4 +1,5 @@
 import { Process, Processor } from '@nestjs/bull';
+import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import { from, of, throwError } from 'rxjs';
 import { mergeMap, tap, toArray } from 'rxjs/operators';
@@ -8,6 +9,7 @@ import { ImportProgressService } from './import-progress.service';
 
 @Processor('queue-member-import')
 export class MemberImportWorker {
+  private readonly logger = new Logger(MemberImportWorker.name);
 
   constructor(
     private graphqlService: GraphQLService,
@@ -19,8 +21,7 @@ export class MemberImportWorker {
     const jobId = job.data.jobId;
     const index = job.data.index;
     const members = job.data.members;
-
-    console.log('processing', 'queue-member-import', jobId, index);
+    this.logger.log(`processing queue-member-import, ${jobId}, ${index}`);
 
     const result = await from(members).pipe(
       mergeMap((member: DataRow) => {
@@ -70,7 +71,7 @@ export class MemberImportWorker {
     ).toPromise();
 
     const returnValue = { index };
-    console.log('completed - ', 'queue-member-import', returnValue);
+    this.logger.log(`completed queue-member-import, ${returnValue}`);
 
     return returnValue;
   }

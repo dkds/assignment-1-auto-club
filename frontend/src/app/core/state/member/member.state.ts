@@ -12,14 +12,14 @@ export interface MemberListState {
 }
 
 export interface MemberImportState {
-    jobId: string | null;
+    jobs: { jobId: string, listening: boolean }[];
     fileSource: File | null;
     error: string | null;
     loading: boolean;
 }
 
 export interface MemberExportState {
-    jobId: string | null;
+    jobs: { jobId: string, listening: boolean }[];
     criterias: any[];
     criteria: string | null;
     variables: any | null;

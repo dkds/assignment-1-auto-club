@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Body, Controller, Get, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Param, Post, Res } from '@nestjs/common';
 import { Queue } from 'bull';
 import { Response } from 'express';
 import { getRandomCode } from 'src/core/util';
@@ -8,6 +8,7 @@ import { EXPORT_CRITERIA } from './export.criteria';
 
 @Controller('export')
 export class FileExportController {
+  private readonly logger = new Logger(FileExportController.name);
 
   constructor(
     private minioClient: MinioClientService,
@@ -42,7 +43,7 @@ export class FileExportController {
       res.setHeader("Content-Disposition", `attachment; filename=member-export.${ext};`)
       return stream.pipe(res);
     } catch (e) {
-      console.error(e);
+      this.logger.error(e);
     }
   }
 }

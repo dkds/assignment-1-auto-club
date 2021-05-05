@@ -3,7 +3,7 @@ import { createEffect, ofType, Actions } from "@ngrx/effects";
 import { of, from } from "rxjs";
 import { mergeMap, map, catchError, filter } from "rxjs/operators";
 import { MemberService } from "../../service/member.service";
-import { getExportCriteriaList, exportListRequest, exportListRequestError, exportListRequestSuccess, importList, importListError, importListSuccess, listLoad, listLoadError, listLoadSuccess, save, saveError, saveSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listNavigate, listSort, listSearch, remove, removeSuccess, removeError } from "./member.actions";
+import { getExportCriteriaList, exportListRequest, exportListRequestError, exportListRequestSuccess, importListRequest, importListRequestError, importListRequestSuccess, listLoad, listLoadError, listLoadSuccess, save, saveError, saveSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listNavigate, listSort, listSearch, remove, removeSuccess, removeError } from "./member.actions";
 
 @Injectable()
 export class MemberEffects {
@@ -62,16 +62,14 @@ export class MemberEffects {
   ));
 
   importMembers = createEffect(() => this.actions.pipe(
-    ofType(importList),
+    ofType(importListRequest),
     mergeMap(({ fileSource }) => {
-      console.log("file", fileSource);
-
       const formData = new FormData();
       formData.append("file", fileSource);
       return this.memberService.importFile(formData)
         .pipe(
-          map(response => (importListSuccess({ jobId: response.jobId }))),
-          catchError(() => of(importListError({ error: "member import failed" })))
+          map(response => (importListRequestSuccess({ jobId: response.jobId }))),
+          catchError(() => of(importListRequestError({ error: "member import failed" })))
         );
     })
   ));

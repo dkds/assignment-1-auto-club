@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { Apollo, QueryRef } from 'apollo-angular';
 import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -17,12 +18,12 @@ export class MemberService {
   private memberSubject: Subject<MemberPage> = new BehaviorSubject(new MemberPage([], 0));
   private listQuery: QueryRef<any, { first: number, offset: number, query: string, orderBy: string }> =
     this.apollo.watchQuery({
-      query: LIST_MEMBERS, variables: { first: 5, offset: 0, query: '*', orderBy: "NATURAL" },
-      pollInterval: 60000,
+      query: LIST_MEMBERS, variables: { first: 10, offset: 0, query: '*', orderBy: "NATURAL" },
     });
   private subscription?: Subscription;
 
   constructor(
+    private logger: NGXLogger,
     private apollo: Apollo,
     private httpClient: HttpClient) {
   }
@@ -32,7 +33,7 @@ export class MemberService {
       return this.listQuery.refetch(variables);
     } else {
       this.subscription = this.listQuery.valueChanges.subscribe((result: any) => {
-        console.log("initData", result);
+        this.logger.debug("initData", result);
 
         const total = result?.data?.members?.totalCount;
         const members = result?.data?.members?.nodes;
@@ -60,7 +61,7 @@ export class MemberService {
       mutation: DELETE_MEMBER,
       variables: { id }
     }).pipe(map((result: any) => {
-      console.log("deleteMember", result);
+      this.logger.debug("deleteMember", result);
       return this.responseHandler(result);
     }));
   }
@@ -82,7 +83,7 @@ export class MemberService {
       mutation: CREATE_MEMBER,
       variables: { ...member, carModelId: member.carModel?.id }
     }).pipe(map((result: any) => {
-      console.log("createMember", result);
+      this.logger.debug("createMember", result);
       return this.responseHandler(result);
     }));
   }
@@ -92,7 +93,7 @@ export class MemberService {
       mutation: UPDATE_MEMBER,
       variables: { ...member, carModelId: member.carModel?.id }
     }).pipe(map((result: any) => {
-      console.log("updateMember", result);
+      this.logger.debug("updateMember", result);
       return this.responseHandler(result);
     }));
   }

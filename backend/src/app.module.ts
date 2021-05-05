@@ -11,7 +11,7 @@ import { GraphQLModule } from './graphql/graphql.module';
   providers: [],
   imports: [
     ConfigModule.forRoot({
-      envFilePath: '../config/.env',
+      envFilePath: '.env',
       isGlobal: true,
     }),
     BullModule.forRoot({

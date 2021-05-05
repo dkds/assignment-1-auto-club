@@ -1,4 +1,5 @@
 import { Component, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { FormBuilder, Validators } from '@angular/forms';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
@@ -38,6 +39,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
 
   constructor(
+    private logger: NGXLogger,
     private store: Store,
     private formBuilder: FormBuilder) { }
 
@@ -49,7 +51,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
     this.store.dispatch(listLoad());
     this.subscriptions.add(
       this.store.select((state: any) => state.member.save.loading).subscribe((loading) => {
-        console.log("state.member.save.loading", loading);
+        this.logger.debug("state.member.save.loading", loading);
         this.formSubmitting = loading;
         if (!loading) {
           this.hide();
@@ -63,7 +65,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   }
 
   onMemberFormSubmit() {
-    console.log(this.memberForm.value);
+    this.logger.debug(this.memberForm.value);
     if (this.formSubmitting) {
       return;
     }

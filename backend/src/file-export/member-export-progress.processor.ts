@@ -1,12 +1,11 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
-import { timer } from 'rxjs';
-import { ExportJobStatusGateway } from './export-job-status.gateway';
+import { ImportJobStatusSCClient } from './export-job-status-sc.client';
 
 @Processor('queue-member-export-progress')
 export class MemberExportProgressProcessor {
 
-  constructor(private jobStatusGateway: ExportJobStatusGateway) { }
+  constructor(private jobStatusGateway: ImportJobStatusSCClient) { }
 
   @Process()
   async process(job: Job<{ jobId: string, total: number, completed: number, returnValue: any }>) {

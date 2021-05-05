@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { Apollo, QueryRef } from 'apollo-angular';
 import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, throwError } from 'rxjs';
 import { first, map, mergeAll } from 'rxjs/operators';
@@ -17,7 +18,9 @@ export class CarModelService {
   });
   private subscription?: Subscription;
 
-  constructor(private apollo: Apollo) {
+  constructor(
+    private logger: NGXLogger,
+    private apollo: Apollo) {
   }
 
   loadCarModels() {
@@ -25,7 +28,7 @@ export class CarModelService {
       return this.listQuery.refetch();
     } else {
       this.subscription = this.listQuery.valueChanges.subscribe((result: any) => {
-        console.log("initDataCarModels", result);
+        this.logger.debug("initDataCarModels", result);
 
         const carModels = result?.data?.carModels;
 
@@ -60,7 +63,7 @@ export class CarModelService {
       mutation: DELETE_CAR_MODEL,
       variables: { id }
     }).pipe(map((result: any) => {
-      console.log("deleteCarModel", result);
+      this.logger.debug("deleteCarModel", result);
       return this.responseHandler(result);
     }));
   }
@@ -70,7 +73,7 @@ export class CarModelService {
       mutation: CREATE_CAR_MODEL,
       variables: { ...carModel, carMakeId: carModel.carMake?.id }
     }).pipe(map((result: any) => {
-      console.log("createCarModel", result);
+      this.logger.debug("createCarModel", result);
       return this.responseHandler(result);
     }));
   }
@@ -80,7 +83,7 @@ export class CarModelService {
       mutation: UPDATE_CAR_MODEL,
       variables: { ...carModel, carMakeId: carModel.carMake?.id }
     }).pipe(map((result: any) => {
-      console.log("updateCarModel", result);
+      this.logger.debug("updateCarModel", result);
       return this.responseHandler(result);
     }));
   }

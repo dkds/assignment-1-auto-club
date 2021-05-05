@@ -1,7 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { MinioClientModule } from 'src/minio-client/minio-client.module';
-import { ExportJobStatusGateway } from './export-job-status.gateway';
+import { ImportJobStatusSCClient } from './export-job-status-sc.client';
 import { FileExportController } from './file-export.controller';
 import { MemberExportProgressProcessor } from './member-export-progress.processor';
 
@@ -18,7 +18,7 @@ import { MemberExportProgressProcessor } from './member-export-progress.processo
   ],
   providers: [
     MemberExportProgressProcessor,
-    ExportJobStatusGateway
+    ImportJobStatusSCClient
   ]
 })
 export class FileExportModule {

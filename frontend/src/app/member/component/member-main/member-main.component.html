@@ -13,20 +13,21 @@
             <div class="float-right btn-group">
 
               <button class="btn btn-sm" (click)="memberImportFormContainer.toggle()"
-                [class.btn-outline-dark]="memberImportFormContainer.collapsed"
-                [class.btn-dark]="!memberImportFormContainer.collapsed"
+                [class.btn-outline-primary]="memberImportFormContainer.collapsed"
+                [class.btn-primary]="!memberImportFormContainer.collapsed"
                 [attr.aria-expanded]="!memberImportFormContainer.collapsed"
                 aria-controls="memberImportFormContainer">Import</button>
 
               <button class="btn btn-sm" (click)="memberExportFormContainer.toggle()"
-                [class.btn-outline-dark]="memberExportFormContainer.collapsed"
-                [class.btn-dark]="!memberExportFormContainer.collapsed"
+                [class.btn-outline-primary]="memberExportFormContainer.collapsed"
+                [class.btn-primary]="!memberExportFormContainer.collapsed"
                 [attr.aria-expanded]="!memberExportFormContainer.collapsed"
                 aria-controls="memberExportFormContainer">Export</button>
 
               <button class="btn btn-sm" (click)="memberFormContainer.toggle()"
-                [class.btn-outline-dark]="memberFormContainer.collapsed"
-                [class.btn-dark]="!memberFormContainer.collapsed" [attr.aria-expanded]="!memberFormContainer.collapsed"
+                [class.btn-outline-primary]="memberFormContainer.collapsed"
+                [class.btn-primary]="!memberFormContainer.collapsed"
+                [attr.aria-expanded]="!memberFormContainer.collapsed"
                 aria-controls="memberFormContainer">{{memberFormMode}}</button>
 
             </div>
@@ -36,63 +37,95 @@
           <member-export-form #memberExportFormContainer></member-export-form>
           <member-form #memberFormContainer (formShown)="onFormShown()" (formHidden)="onFormHidden()"></member-form>
 
-          <div class="input-group input-group-sm pt-3">
-            <input type="text" class="form-control" #search
-            (keydown.enter)="onSearch(search.value)">
-            <div class="input-group-append">
-              <button class="btn btn-outline-secondary" type="button" (click)="onSearch(search.value)">Search</button>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 mb-5">
+
+          <div class="card">
+            <div class="card-body">
+
+              <div class="row">
+                <div class="col-12 mb-2">
+                  <div class="input-group input-group-sm">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text">
+                        <i class="bi bi-search"></i>
+                      </span>
+                    </div>
+                    <input type="text" class="form-control" #search (keydown.enter)="onSearch(search.value)">
+                  </div>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-12 mb-4">
+                  <select class="form-control form-control-sm" id="sortMode" (change)="onSortModeChange($event)">
+                    <option *ngFor="let sortMode of sortModes" [value]="sortMode.name">{{sortMode.text}}</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row" *ngIf="(memberList | async) as members; else loading">
+                <div class="col-12 item-container">
+
+                  <label *ngIf="!members.length">No records found</label>
+
+                  <ul class="list-group">
+                    <li *ngFor="let member of members" class="list-group-item list-group-item-action"
+                      aria-current="true">
+                      <div class="row">
+                        <div class="col-8">
+                          <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{member.firstName + " " + member.lastName}}</h6>
+                          </div>
+                          <div class="float-left pl-1 pt-2">
+                            <!-- <p class="mb-1">Email: {{member.email}}</p>
+                            <p class="mb-1">Car: {{member?.carModel?.carMake?.name + " " + member.carModel?.name}}</p>
+                            <p class="mb-1">VIN: {{member?.vin}}</p>
+                            <p class="mb-1">MFD: {{member?.mfd | date: 'YYYY-MM-dd'}}</p> -->
+                            <p style="font-size: 0.9em;">
+                              Email: {{member.email}} <br>
+                              Car: {{member?.carModel?.carMake?.name + " " + member.carModel?.name}} <br>
+                              VIN: {{member?.vin}} <br>
+                              MFD: {{member?.mfd | date: 'YYYY-MM-dd'}} <br>
+                            </p>
+                          </div>
+                        </div>
+                        <div class="col-4">
+                          <div class="member-info-controls">
+                            <div class="btn-group" role="group">
+                              <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="listProcessing"
+                                title="Edit" (click)="onItemEditClick($event, member)">
+                                <i class="bi bi-pencil"></i>
+                              </button>
+                              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="listProcessing"
+                                title="Delete" (click)="onItemDeleteClick($event, member)">
+                                <i class="bi bi-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
+
+                </div>
+              </div>
+              <ng-template #loading>
+                <label>Loading...</label>
+              </ng-template>
+
+              <ngb-pagination class="d-flex justify-content-end pr-3 pt-3" *ngIf="totalMemberSize | async as total"
+                [collectionSize]="total" [pageSize]="pageSize" [maxSize]="6" (pageChange)="onPageChange($event)">
+              </ngb-pagination>
+
             </div>
           </div>
 
         </div>
       </div>
-
-      <div class="row">
-        <div class="col-12 mb-4">
-          <select class="form-control form-control-sm" id="sortMode" (change)="onSortModeChange($event)">
-            <option *ngFor="let sortMode of sortModes" [value]="sortMode.name">{{sortMode.text}}</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="row item-container">
-        <div class="col-12">
-
-          <ul class="list-group">
-            <li *ngFor="let member of memberList | async" class="list-group-item list-group-item-action"
-              aria-current="true">
-              <div class="row">
-                <div class="col-8">
-                  <div class="d-flex w-100 justify-content-between">
-                    <h6 class="mb-1">{{member.firstName + " " + member.lastName}}</h6>
-                  </div>
-                  <div class="float-left pl-1 pt-2">
-                    <p class="mb-1">Email: {{member.email}}</p>
-                    <p class="mb-1">Car: {{member?.carModel?.carMake?.name + " " + member.carModel?.name}}</p>
-                    <p class="mb-1">VIN: {{member?.vin}}</p>
-                    <p class="mb-1">MFD: {{member?.mfd | date: 'YYYY-MM-dd'}}</p>
-                  </div>
-                </div>
-                <div class="col-4">
-                  <div class="member-info-controls">
-                    <div class="btn-group" role="group">
-                      <button type="button" class="btn btn-sm btn-secondary" [disabled]="listProcessing"
-                        (click)="onItemEditClick($event, member)">Edit</button>
-                      <button type="button" class="btn btn-sm btn-secondary" [disabled]="listProcessing"
-                        (click)="onItemDeleteClick($event, member)">Delete</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ul>
-
-        </div>
-      </div>
-
-      <ngb-pagination class="d-flex justify-content-end pr-3 pt-3" *ngIf="totalMemberSize | async as total"
-        [collectionSize]="total" [pageSize]="pageSize" [maxSize]="6" (pageChange)="onPageChange($event)">
-      </ngb-pagination>
 
     </div>
   </div>

@@ -44,19 +44,33 @@ export const removeError = createAction(
     props<{ error: string }>()
 );
 
-export const importList = createAction(
-    '[Member List Import/API] Import',
+export const importListRequest = createAction(
+    '[Member List Import/API] Import Request',
     props<{ fileSource: File }>()
 );
 
-export const importListSuccess = createAction(
-    '[Member List Import/API] Import Success',
+export const importListRequestSuccess = createAction(
+    '[Member List Import/API] Import Request Success',
     props<{ jobId: string }>()
 );
 
-export const importListError = createAction(
-    '[Member List Import/API] Import Error',
+export const importListRequestError = createAction(
+    '[Member List Import/API] Import Request Error',
     props<{ error: string }>()
+);
+
+export const importListRequestListenerStarted = createAction(
+    '[Member List Import/API] Import Listener Started',
+    props<{ jobId: string }>()
+);
+
+export const importListRequestListenerEnded = createAction(
+    '[Member List Import/API] Import Listener Ended'
+);
+
+export const importListRequestCompleted = createAction(
+    '[Member List Import/API] Import Completed',
+    props<{ jobId: string }>()
 );
 
 export const getExportCriteriaList = createAction(
@@ -87,8 +101,18 @@ export const exportListRequestError = createAction(
     props<{ error: string }>()
 );
 
-export const exportListSuccess = createAction(
-    '[Member List Export/API] Export Success'
+export const exportListRequestListenerStarted = createAction(
+    '[Member List Export/API] Export Listener Started',
+    props<{ jobId: string }>()
+);
+
+export const exportListRequestListenerEnded = createAction(
+    '[Member List Export/API] Export Listener Ended'
+);
+
+export const exportListRequestCompleted = createAction(
+    '[Member List Export/API] Export Completed',
+    props<{ jobId: string }>()
 );
 
 export const save = createAction(

@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { NGXLogger } from "ngx-logger";
 import { Store } from '@ngrx/store';
 import { DateTime } from 'luxon';
 import { Observable, Subscription } from 'rxjs';
@@ -22,10 +23,12 @@ export class MemberComponent implements OnInit, OnDestroy {
   sortModes: { name: string, text: SortMode }[] = Object.entries(SortMode).map(([name, text]) => ({ name, text }));
 
   memberFormMode: string = "New";
-  pageSize = 5;
+  pageSize = 10;
   listProcessing = false;
 
-  constructor(private store: Store) { }
+  constructor(
+    private logger: NGXLogger,
+    private store: Store) { }
 
   ngOnInit(): void {
     this.store.dispatch(listLoad());
@@ -33,7 +36,7 @@ export class MemberComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.store.select((state: any) => state.member.remove.loading).subscribe((loading) => {
         this.listProcessing = loading;
-        console.log('this.memberForm', this.memberForm, loading);
+        this.logger.debug('this.memberForm', this.memberForm, loading);
         if (!loading) {
           this.memberForm?.hide();
           this.store.dispatch(listLoad());
@@ -74,7 +77,7 @@ export class MemberComponent implements OnInit, OnDestroy {
     if (this.listProcessing) {
       return;
     }
-    console.log("delete", member);
+    this.logger.debug("delete", member);
     if (confirm(`Are you sure you want to delete '${member.firstName} ${member.lastName}'`)) {
       this.store.dispatch(remove({ id: member.id }));
     }
@@ -86,7 +89,7 @@ export class MemberComponent implements OnInit, OnDestroy {
   }
 
   onSearch(query: string) {
-    console.log('search', query);
+    this.logger.debug('search', query);
     this.store.dispatch(listSearch({ query }));
   }
 

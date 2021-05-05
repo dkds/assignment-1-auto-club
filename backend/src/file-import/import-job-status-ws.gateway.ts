@@ -1,8 +1,10 @@
+import { Logger } from '@nestjs/common';
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 @WebSocketGateway({ namespace: "job-status/import" })
 export class ImportJobStatusGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(ImportJobStatusGateway.name);
 
   @WebSocketServer() server: Server;
   private clients: { jobId: string, socket: Socket }[] = [];
@@ -12,7 +14,7 @@ export class ImportJobStatusGateway implements OnGatewayInit, OnGatewayConnectio
   handleConnection(client: Socket, ..._args: any[]) {
     client.once("progress-listener-ready", (data) => {
       this.clients.push({ jobId: data?.jobId, socket: client });
-      console.log("ws connected", this.clients.length);
+      this.logger.log(`WS Import connected, total clients: ${this.clients.length}`);
     });
   }
 
@@ -24,17 +26,17 @@ export class ImportJobStatusGateway implements OnGatewayInit, OnGatewayConnectio
     }, []).forEach(i => {
       this.clients.splice(i, 1);
     });
-    console.log("ws disconnected", this.clients.length);
+    this.logger.log(`WS Import disconnected, total clients: ${this.clients.length}`);
   }
 
   afterInit(_server: Server) {
-    console.log("ws", 'afterInit', 'import');
+    this.logger.log(`WS Import server initialized at /job-status/import`);
   }
 
   notifyFinish(jobId: string, data?: any) {
-    const client = this.notify(jobId, "job-finished", { jobId: jobId, data });
-    if (client) {
-      client.disconnect();
+    const clients = this.notify(jobId, "job-finished", { jobId: jobId, data });
+    if (clients) {
+      clients.forEach(client => client.disconnect());
     }
   }
 
@@ -43,20 +45,19 @@ export class ImportJobStatusGateway implements OnGatewayInit, OnGatewayConnectio
   }
 
   private notify(jobId: string, event: string, data: any) {
-    const client = this.getClient(jobId);
-    // console.log("ws", 'notify', jobId, event, data);
-    if (client) {
-      client.emit(event, data);
+    const clients = this.getClients(jobId);
+    if (clients.length) {
+      clients.forEach(client => client.emit(event, data));
     } else {
-      console.error("ws", 'notify', "No client found for", jobId);
+      this.logger.warn(`WS Import notify - No clients found for, ${jobId}`);
     }
-    return client;
+    return clients;
   }
 
-  private getClient(jobId: string) {
-    const client = this.clients.find(client => jobId == client.jobId);
-    if (client) {
-      return client.socket;
+  private getClients(jobId: string) {
+    const clients = this.clients.filter(client => jobId == client.jobId);
+    if (clients.length) {
+      return clients.map(c => c.socket);
     }
   }
 }

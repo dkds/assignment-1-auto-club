@@ -1,11 +1,10 @@
-import { nullSafeIsEquivalent } from '@angular/compiler/src/output/output_ast';
 import { on } from '@ngrx/store';
 import { createImmerReducer } from 'ngrx-immer/store';
-import { listSort, listNavigate, listLoadSuccess, listLoadError, remove, removeSuccess, removeError, importList, importListSuccess, importListError, save, saveError, saveSuccess, exportListRequest, exportListRequestError, exportListRequestSuccess, getExportCriteriaList, getExportCriteriaListSuccess, getExportCriteriaListError, listSearch, exportListSuccess } from './member.actions';
+import { listSort, listNavigate, listLoadSuccess, listLoadError, remove, removeSuccess, removeError, importListRequest, importListRequestSuccess, importListRequestError, save, saveError, saveSuccess, exportListRequest, exportListRequestError, exportListRequestSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listSearch, importListRequestCompleted, importListRequestListenerStarted, importListRequestListenerEnded, exportListRequestCompleted, exportListRequestListenerEnded, exportListRequestListenerStarted } from './member.actions';
 import { MemberExportState, MemberImportState, MemberListState, MemberRemoveState, MemberSaveState } from './member.state';
 
 export const initialMemberListState: MemberListState = {
-    first: 5,
+    first: 10,
     offset: 0,
     orderBy: "NATURAL",
     searchQuery: '',
@@ -16,14 +15,14 @@ export const initialMemberListState: MemberListState = {
 };
 
 export const initialMemberImportState: MemberImportState = {
-    jobId: null,
+    jobs: [],
     fileSource: null,
     error: null,
     loading: false,
 };
 
 export const initialMemberExportState: MemberExportState = {
-    jobId: null,
+    jobs: [],
     criterias: [],
     criteria: null,
     variables: null,
@@ -77,20 +76,32 @@ export const memberListReducer = createImmerReducer(
 
 export const memberImportReducer = createImmerReducer(
     initialMemberImportState,
-    on(importList, (state, { fileSource }) => {
+    on(importListRequest, (state, { fileSource }) => {
         state.fileSource = fileSource;
         state.loading = true;
         return state;
     }),
-    on(importListSuccess, (state, { jobId }) => {
-        state.jobId = jobId;
+    on(importListRequestSuccess, (state, { jobId }) => {
+        state.jobs = [...state.jobs, { jobId, listening: false }];
         state.fileSource = null;
         state.loading = false;
         return state;
     }),
-    on(importListError, (state, { error }) => {
+    on(importListRequestError, (state, { error }) => {
         state.error = error;
         state.loading = false;
+        return state;
+    }),
+    on(importListRequestListenerStarted, (state, { jobId }) => {
+        state.jobs = [...state.jobs.filter(job => job.jobId != jobId), { jobId, listening: true }];
+        return state;
+    }),
+    on(importListRequestListenerEnded, (state) => {
+        state.jobs = state.jobs.map(job => { job.listening = false; return job; });
+        return state;
+    }),
+    on(importListRequestCompleted, (state, { jobId }) => {
+        state.jobs = state.jobs.filter(job => job.jobId != jobId);
         return state;
     }),
 );
@@ -104,7 +115,7 @@ export const memberExportReducer = createImmerReducer(
         return state;
     }),
     on(exportListRequestSuccess, (state, { jobId }) => {
-        state.jobId = jobId;
+        state.jobs = [...state.jobs, { jobId, listening: false }];
         state.criteria = null;
         state.variables = null;
         state.loading = false;
@@ -117,8 +128,16 @@ export const memberExportReducer = createImmerReducer(
         state.loading = false;
         return state;
     }),
-    on(exportListSuccess, (state) => {
-        state.jobId = null;
+    on(exportListRequestListenerStarted, (state, { jobId }) => {
+        state.jobs = [...state.jobs.filter(job => job.jobId != jobId), { jobId, listening: true }];
+        return state;
+    }),
+    on(exportListRequestListenerEnded, (state) => {
+        state.jobs = state.jobs.map(job => { job.listening = false; return job; });
+        return state;
+    }),
+    on(exportListRequestCompleted, (state, { jobId }) => {
+        state.jobs = state.jobs.filter(job => job.jobId != jobId);
         state.criteria = null;
         state.variables = null;
         state.loading = false;
