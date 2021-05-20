@@ -6,20 +6,26 @@ import { MemoizedSelector, DefaultProjectorFn } from "@ngrx/store";
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
 import { NGXLogger } from "ngx-logger";
 import { CarMake } from "src/app/core/model/car-make.model";
-import { remove, save } from "src/app/core/state/car-make/car-make.actions";
-import { listCarMakes, removeLoading, saveLoading } from "src/app/core/state/car-make/car-make.selectors";
-import { CarMakeComponent } from "./car-make-main.component";
+import { CarModel } from "src/app/core/model/car-model.model";
+import { listCarMakes } from "src/app/core/state/car-make/car-make.selectors";
+import { remove, save } from "src/app/core/state/car-model/car-model.actions";
+import { listCarModels, removeLoading, saveLoading } from "src/app/core/state/car-model/car-model.selectors";
+import { CarModelComponent } from "./car-model-main.component";
 
-describe("CarMakeComponent", () => {
+describe("CarModelComponent", () => {
+  const initialCarModelList = [
+    { id: 1, name: "carmodel1", carMake: { id: 1, name: "carmake1" } } as CarModel,
+    { id: 2, name: "carmodel2", carMake: { id: 1, name: "carmake1" } } as CarModel,
+  ];
   const initialCarMakeList = [
     CarMake.fromObject({ id: 1, name: "carmake1" }),
     CarMake.fromObject({ id: 2, name: "carmake2" }),
   ];
 
   let store: MockStore;
-  let fixture: ComponentFixture<CarMakeComponent>;
-  let component: CarMakeComponent;
-  let listSelector: MemoizedSelector<any, CarMake[], DefaultProjectorFn<CarMake[]>>;
+  let fixture: ComponentFixture<CarModelComponent>;
+  let component: CarModelComponent;
+  let listSelector: MemoizedSelector<any, CarModel[], DefaultProjectorFn<CarModel[]>>;
 
   beforeEach(waitForAsync(() => {
     const logMock = jasmine.createSpyObj('NGXLogger', ['debug']);
@@ -28,7 +34,7 @@ describe("CarMakeComponent", () => {
         provideMockStore(),
         { provide: NGXLogger, useValue: logMock },
       ],
-      declarations: [CarMakeComponent],
+      declarations: [CarModelComponent],
       imports: [
         ReactiveFormsModule,
         NgbCollapseModule,
@@ -39,6 +45,10 @@ describe("CarMakeComponent", () => {
   beforeEach(() => {
     store = TestBed.inject(MockStore);
     listSelector = store.overrideSelector(
+      listCarModels,
+      initialCarModelList
+    );
+    store.overrideSelector(
       listCarMakes,
       initialCarMakeList
     );
@@ -50,7 +60,7 @@ describe("CarMakeComponent", () => {
       removeLoading,
       false
     );
-    fixture = TestBed.createComponent(CarMakeComponent);
+    fixture = TestBed.createComponent(CarModelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
     spyOn(store, 'dispatch').and.callFake(() => {
@@ -64,44 +74,52 @@ describe("CarMakeComponent", () => {
   });
 
   it('form should be validated properly', () => {
-    const form = component.carMakeForm;
+    const form = component.carModelForm;
     expect(form.valid).toBeFalsy();
 
-    const nameInput = form.controls.name;
-    nameInput.setValue('Test Car Make 1');
+    form.controls.name.setValue('Test Car Model 1');
+    form.controls.carMakeId.setValue(1);
+
     expect(form.valid).toBeTruthy();
   });
 
   it('form submit should fail on invalid form', () => {
-    const form = component.carMakeForm;
+    const form = component.carModelForm;
     const nameInput = form.controls.name;
     nameInput.setValue(null);
 
-    component.onCarMakeFormSubmit();
+    component.onCarModelFormSubmit();
     expect(store.dispatch).not.toHaveBeenCalled();
   });
 
   it('form submit should dispatch save action', () => {
-    const form = component.carMakeForm;
-    const nameInput = form.controls.name;
-    nameInput.setValue('Test Car Make 1');
+    const form = component.carModelForm;
 
-    component.onCarMakeFormSubmit();
+    form.controls.name.setValue('Test Car Model 1');
+    form.controls.carMakeId.setValue(1);
+
+    const carModel = {
+      id: form.value.id,
+      name: form.value.name,
+      carMake: { id: 1 }
+    } as CarModel;
+
+    component.onCarModelFormSubmit();
     expect(store.dispatch).toHaveBeenCalledWith(
-      save({ carMake: form.value })
+      save({ carModel })
     );
   });
 
-  it('should have correct number of car makes on load', () => {
+  it('should have correct number of car models on load', () => {
     expect(
       fixture.debugElement.queryAll(By.css('.item-container .list-group .list-group-item')).length
-    ).toBe(initialCarMakeList.length);
+    ).toBe(initialCarModelList.length);
   });
 
-  it('should have correct number of car makes on change', () => {
+  it('should have correct number of car models on change', () => {
     const newResult = [
-      ...initialCarMakeList,
-      CarMake.fromObject({ id: 3, name: "carmake3" }),
+      ...initialCarModelList,
+      { id: 1, name: "carmodel1", carMake: { id: 1, name: "carmake1" } } as CarModel,
     ];
     listSelector.setResult(newResult);
     store.refreshState();
@@ -111,7 +129,7 @@ describe("CarMakeComponent", () => {
       fixture.debugElement.queryAll(By.css('.item-container .list-group .list-group-item')).length
     ).toBe(newResult.length);
 
-    listSelector.setResult(initialCarMakeList);
+    listSelector.setResult(initialCarModelList);
     store.refreshState();
   });
 
@@ -121,10 +139,10 @@ describe("CarMakeComponent", () => {
 
     item.query(By.css('button.btn.btn-edit')).nativeElement.click();
 
-    const name = component.carMakeForm.value.name;
+    const name = component.carModelForm.value.name;
 
     expect(h6.nativeElement.textContent).toEqual(name);
-    expect(component.carMakeFormCollapsed).toBeFalse();
+    expect(component.carModelFormCollapsed).toBeFalse();
   });
 
   it('clicking delete should trigger confirm dialog', () => {

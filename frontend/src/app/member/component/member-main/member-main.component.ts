@@ -6,6 +6,7 @@ import { Observable, Subscription } from 'rxjs';
 import { Member } from '../../../core/model/member.model';
 import { SortMode } from '../../../core/model/sort-mode.enum';
 import { listLoad, listNavigate, remove, listSort, listSearch } from '../../../core/state/member/member.actions';
+import { listMembers, listTotalCount, removeLoading, saveLoading } from '../../../core/state/member/member.selectors';
 import { MemberFormComponent } from '../member-form/member-form.component';
 
 @Component({
@@ -18,8 +19,8 @@ export class MemberComponent implements OnInit, OnDestroy {
   @ViewChild("memberFormContainer") memberForm!: MemberFormComponent;
 
   subscriptions: Subscription = new Subscription();
-  memberList: Observable<Member[]> = this.store.select((state: any) => state.member.list.members);
-  totalMemberSize: Observable<number> = this.store.select((state: any) => state.member.list.totalCount);
+  memberList: Observable<Member[]> = this.store.select(listMembers);
+  totalMemberSize: Observable<number> = this.store.select(listTotalCount);
   sortModes: { name: string, text: SortMode }[] = Object.entries(SortMode).map(([name, text]) => ({ name, text }));
 
   memberFormMode: string = "New";
@@ -34,7 +35,7 @@ export class MemberComponent implements OnInit, OnDestroy {
     this.store.dispatch(listLoad());
 
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.remove.loading).subscribe((loading) => {
+      this.store.select(removeLoading).subscribe((loading) => {
         this.listProcessing = loading;
         this.logger.debug('this.memberForm', this.memberForm, loading);
         if (!loading) {
@@ -44,7 +45,7 @@ export class MemberComponent implements OnInit, OnDestroy {
       })
     );
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.save.loading).subscribe((loading) => {
+      this.store.select(saveLoading).subscribe((loading) => {
         this.listProcessing = loading;
         if (!loading) {
           this.store.dispatch(listLoad());

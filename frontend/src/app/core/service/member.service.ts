@@ -9,7 +9,6 @@ import { Member } from '../model/member.model';
 import { LIST_MEMBERS, CREATE_MEMBER, UPDATE_MEMBER, DELETE_MEMBER } from './graphql.schema';
 import { environment } from '../../../environments/environment';
 
-
 @Injectable({
   providedIn: 'root'
 })

@@ -10,6 +10,8 @@ import { listLoad } from 'src/app/core/state/car-model/car-model.actions';
 import { save } from 'src/app/core/state/member/member.actions';
 import { MemberForm } from '../../../core/model/member-form.model';
 import { Member } from '../../../core/model/member.model';
+import { saveLoading } from 'src/app/core/state/member/member.selectors';
+import { listCarModels } from 'src/app/core/state/car-model/car-model.selectors';
 
 @Component({
   selector: 'member-form',
@@ -22,7 +24,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   @Output("formShown") formShownEmitter = new EventEmitter();
   @Output("formHidden") formHiddenEmitter = new EventEmitter();
 
-  carModelList: Observable<CarModel[]> = this.store.select((state: any) => state.carModel.list.carModels);
+  carModelList: Observable<CarModel[]> = this.store.select(listCarModels);
   formSubmitted = false;
   formCollapsed = true;
   formSubmitting = false;
@@ -50,7 +52,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.dispatch(listLoad());
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.save.loading).subscribe((loading) => {
+      this.store.select(saveLoading).subscribe((loading) => {
         this.logger.debug("state.member.save.loading", loading);
         this.formSubmitting = loading;
         if (!loading) {

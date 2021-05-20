@@ -6,6 +6,7 @@ import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { listLoad, remove, save } from 'src/app/core/state/car-make/car-make.actions';
 import { CarMake } from '../../core/model/car-make.model';
+import { listCarMakes, removeLoading, saveLoading } from 'src/app/core/state/car-make/car-make.selectors';
 
 @Component({
   selector: 'car-make-main',
@@ -16,12 +17,12 @@ export class CarMakeComponent implements OnInit, OnDestroy {
 
   @ViewChild("carMakeFormContainer") carMakeFormContainer!: NgbCollapse;
 
-  carMakeList: Observable<CarMake[]> = this.store.select((state: any) => state.carMake.list.carMakes);
+  carMakeList: Observable<CarMake[]> = this.store.select(listCarMakes);
   formMode: string = "New";
   carMakeFormSubmitted = false;
   carMakeFormCollapsed = true;
   carMakeFormSubmitting = false;
-  carMakeForm = this.formBuilder.group({
+  carMakeForm = this.fb.group({
     id: [0],
     name: ['', Validators.required],
   });
@@ -30,7 +31,7 @@ export class CarMakeComponent implements OnInit, OnDestroy {
   constructor(
     private logger: NGXLogger,
     private store: Store,
-    private formBuilder: FormBuilder) {
+    private fb: FormBuilder) {
   }
 
   get form() {
@@ -52,7 +53,7 @@ export class CarMakeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.dispatch(listLoad());
     this.subscriptions.add(
-      this.store.select((state: any) => state.carMake.save.loading).subscribe((loading) => {
+      this.store.select(saveLoading).subscribe((loading) => {
         this.logger.debug("state.carMake.save.loading", loading);
         this.carMakeFormSubmitting = loading;
         if (!loading) {
@@ -61,7 +62,7 @@ export class CarMakeComponent implements OnInit, OnDestroy {
       })
     );
     this.subscriptions.add(
-      this.store.select((state: any) => state.carMake.remove.loading).subscribe((loading) => {
+      this.store.select(removeLoading).subscribe((loading) => {
         this.carMakeFormSubmitting = loading;
         if (!loading) {
           this.hideCarMakeForm();

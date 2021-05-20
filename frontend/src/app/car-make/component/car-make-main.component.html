@@ -42,9 +42,9 @@
                 <h6 class="mb-1">{{carMake.name}}</h6>
                 <div class="float-right">
                   <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="carMakeFormSubmitting"
+                    <button type="button" class="btn btn-sm btn-secondary btn-edit" [disabled]="carMakeFormSubmitting"
                       (click)="onItemEditClick($event, carMake)">Edit</button>
-                    <button type="button" class="btn btn-sm btn-secondary" [disabled]="carMakeFormSubmitting"
+                    <button type="button" class="btn btn-sm btn-secondary btn-delete" [disabled]="carMakeFormSubmitting"
                       (click)="onItemDeleteClick($event, carMake)">Delete</button>
                   </div>
                 </div>

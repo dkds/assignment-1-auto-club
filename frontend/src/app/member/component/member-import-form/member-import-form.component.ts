@@ -8,6 +8,7 @@ import { ToastService } from '../../../shared/service/toast.service';
 import { Store } from '@ngrx/store';
 import { importListRequest, importListRequestListenerEnded, importListRequestListenerStarted, listLoad } from '../../../core/state/member/member.actions';
 import { filter, mergeAll, tap } from 'rxjs/operators';
+import { importJobs, importLoading } from 'src/app/core/state/member/member.selectors';
 
 @Component({
   selector: 'member-import-form',
@@ -21,7 +22,7 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
   formSubmitted = false;
   formSubmitting = false;
   collapsed = true;
-  importForm = this.formBuilder.group({
+  importForm = this.fb.group({
     file: ['', Validators.required],
     fileSource: ['', Validators.required]
   });
@@ -31,22 +32,22 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
     private logger: NGXLogger,
     private store: Store,
     private toastService: ToastService,
-    private formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private jobStatus: JobStatusService) { }
 
   ngOnInit(): void {
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.import.loading).subscribe((loading) => {
+      this.store.select(importLoading).subscribe((loading) => {
         this.logger.debug('state.member.import.loading', loading);
         this.formSubmitting = loading;
       })
     );
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.import.jobs as { jobId: string, listening: boolean }[])
+      this.store.select(importJobs)
         .pipe(mergeAll(), filter(({ listening }) => !listening))
         .subscribe(({ jobId }) => {
           this.hideMemberImportForm();
-          
+
           this.logger.debug("response", jobId);
 
           const progressToast = this.toastService.showProgress({
@@ -62,7 +63,6 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
           this.subscriptions.add(
             this.jobStatus.connect(jobId, 'import').subscribe({
               next: (data) => {
-                // this.logger.debug("component listener", data);
                 progressToast.progressBar = {
                   type: "primary",
                   text: `importing ${data.progress.toFixed(1)}%`,

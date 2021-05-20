@@ -4,7 +4,6 @@ import { ApolloService } from 'src/core/service/apollo.service';
 import { GraphQLService } from 'src/core/service/graphql.service';
 import { MinioClientModule } from 'src/minio-client/minio-client.module';
 import { FileReadWorker } from './file-read.processor';
-import { ImportProgressService } from './import-progress.service';
 import { MemberImportWorker } from './member-import.processor';
 
 @Module({
@@ -12,7 +11,6 @@ import { MemberImportWorker } from './member-import.processor';
     BullModule.registerQueue(
       { name: 'queue-file-read' },
       { name: 'queue-member-import' },
-      { name: 'queue-member-import-progress' },
     ),
     MinioClientModule,
     HttpModule,
@@ -22,7 +20,6 @@ import { MemberImportWorker } from './member-import.processor';
     ApolloService,
     GraphQLService,
     MemberImportWorker,
-    ImportProgressService,
   ]
 })
 export class FileImportModule {

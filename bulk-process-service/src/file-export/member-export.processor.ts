@@ -6,7 +6,6 @@ import { delay, map, mergeAll, tap, toArray } from 'rxjs/operators';
 import { GraphQLService } from 'src/core/service/graphql.service';
 import { BufferedFile } from '../minio-client/file.model';
 import { MinioClientService } from '../minio-client/minio-client.service';
-import { ExportProgressService } from './export-progress.service';
 
 @Processor('queue-member-export')
 export class MemberExportProcessor {
@@ -14,8 +13,7 @@ export class MemberExportProcessor {
 
   constructor(
     private minioClient: MinioClientService,
-    private graphqlService: GraphQLService,
-    private exportProgress: ExportProgressService) { }
+    private graphqlService: GraphQLService) { }
 
   @Process()
   async process(job: Job<{ jobId: string, criteria: any, variables: any }>) {
@@ -27,19 +25,19 @@ export class MemberExportProcessor {
 
     const members = await this.graphqlService.getMembersByQuery(criteria, variables)
       .pipe(
-        tap((data) => {
-          this.exportProgress.init(jobId, data.length);
+        tap(() => {
+          job.progress({ jobId, progress: 0 });
         }),
         mergeAll(),
-        map((member: any) => {
+        map((member: any, index: number) => {
           member.carMake = member.carModel.carMake.name;
           member.carModel = member.carModel.name;
           delete member.__typename;
-          return member;
+          return { member, index };
         }),
         delay(200),
         tap(() => {
-          this.exportProgress.increment(jobId);
+          job.progress({ jobId, progress: 20 });
         }),
         toArray()
       )
@@ -48,6 +46,7 @@ export class MemberExportProcessor {
     const workbook = new Workbook();
     const worksheet = workbook.addWorksheet();
 
+    job.progress({ jobId, progress: 40 });
 
     worksheet.columns = [
       { header: 'Id', key: 'id' },
@@ -63,18 +62,20 @@ export class MemberExportProcessor {
     worksheet.addRows(members);
     this.logger.log(`worksheet: ${worksheet.rowCount}`);
 
+    job.progress({ jobId, progress: 60 });
     const buffer: any = await workbook.csv.writeBuffer({ sheetName: "sheet1" });
     const bufferedFile: BufferedFile = {
       originalname: `${jobId}.csv`,
       mimetype: 'text/csv',
       buffer,
     };
-    const response = await this.minioClient.upload(bufferedFile);
+    job.progress({ jobId, progress: 80 });
+    await this.minioClient.upload(bufferedFile);
 
-    const returnValue = { jobId, ...response };
-    this.logger.log(`return queue-member-export, ${returnValue}`);
+    const returnValue = { jobId };
+    this.logger.log(`return queue-member-export, ${returnValue.jobId}`);
 
-    this.exportProgress.finish(jobId, returnValue);
+    job.progress({ jobId, progress: 100 });
 
     return returnValue;
   }

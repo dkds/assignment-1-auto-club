@@ -1,6 +1,5 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
-import { ImportJobStatusGateway } from 'src/file-import/import-job-status-ws.gateway';
 import { GraphQLModule } from 'src/graphql/graphql.module';
 import { MinioClientModule } from 'src/minio-client/minio-client.module';
 import { FileImportController } from './file-import.controller';
@@ -9,10 +8,7 @@ import { MemberImportProgressProcessor } from './member-import-progress.processo
 
 @Module({
   imports: [
-    BullModule.registerQueue(
-      { name: 'queue-file-read' },
-      { name: 'queue-member-import-progress' },
-    ),
+    BullModule.registerQueue({ name: 'queue-file-read' }),
     MinioClientModule,
     GraphQLModule
   ],
@@ -21,7 +17,6 @@ import { MemberImportProgressProcessor } from './member-import-progress.processo
   ],
   providers: [
     MemberImportProgressProcessor,
-    ImportJobStatusGateway,
     ImportJobStatusSCClient
   ]
 })

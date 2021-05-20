@@ -1,11 +1,10 @@
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Job, Queue } from 'bull';
 import { Row, Workbook, Worksheet } from 'exceljs';
-import { bufferCount, map } from 'rxjs/operators';
+import { bufferCount, map, tap, toArray } from 'rxjs/operators';
 import { from } from 'rxjs';
 import { MinioClientService } from 'src/minio-client/minio-client.service';
 import { DataRow } from 'src/core/model/data-row.model';
-import { ImportProgressService } from './import-progress.service';
 import { Logger } from '@nestjs/common';
 
 @Processor('queue-file-read')
@@ -14,7 +13,6 @@ export class FileReadWorker {
 
   constructor(
     private minioClient: MinioClientService,
-    private importProgress: ImportProgressService,
     @InjectQueue('queue-member-import') private memberImportQueue: Queue) {
   }
 
@@ -31,29 +29,44 @@ export class FileReadWorker {
     await workbook.xlsx.read(stream);
 
     const [data, errors] = this.getData(workbook);
-    if (errors) {
+    if (errors.length) {
       this.logger.error(`error queue-file-read, ${errors}`);
     }
 
+    // const rows = data.splice(0, 12);
     const rows = data;
     this.logger.log(`rows, ${rows.length}`);
 
-    from(rows)
+    await from(rows)
       .pipe(
         bufferCount(5),
         map((members: DataRow[], index) => {
           return { jobId, members, index: ++index };
         }),
+        tap((data) => {
+          this.logger.log(`members - ${data.index}`);
+          this.memberImportQueue.add({ ...data }, { delay: 2000 });
+        }),
+        toArray()
       )
-      .subscribe((data) => {
-        this.logger.log(`members - ${data.index}`);
-        this.memberImportQueue.add({ ...data }, { delay: 2000 });
-      });
+      .toPromise();
 
-    this.importProgress.init(jobId, rows.length);
+    let totalProgress = 0;
+    job.progress({ jobId, progress: totalProgress.toFixed(2) });
+
+    await new Promise((resolve) => {
+      this.memberImportQueue.on("progress", () => {
+        totalProgress++;
+        job.progress({ jobId, progress: +((totalProgress / rows.length) * 100).toFixed(2) });
+        if (totalProgress == rows.length) {
+          this.memberImportQueue.removeAllListeners("progress");
+          resolve(1);
+        }
+      });
+    });
 
     const returnValue = { jobId };
-    this.logger.log(`return - queue-file-read, ${returnValue}`);
+    this.logger.log(`return - queue-file-read, ${returnValue.jobId}`);
 
     return returnValue;
   }

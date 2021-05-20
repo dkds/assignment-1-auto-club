@@ -7,10 +7,7 @@ import { MemberExportProgressProcessor } from './member-export-progress.processo
 
 @Module({
   imports: [
-    BullModule.registerQueue(
-      { name: 'queue-member-export' },
-      { name: 'queue-member-export-progress' },
-    ),
+    BullModule.registerQueue({ name: 'queue-member-export' }),
     MinioClientModule
   ],
   controllers: [

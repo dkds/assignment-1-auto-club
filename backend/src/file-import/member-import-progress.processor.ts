@@ -1,24 +1,19 @@
-import { Process, Processor } from '@nestjs/bull';
-import { Job } from 'bull';
+import { OnGlobalQueueCompleted, OnGlobalQueueProgress, Processor } from '@nestjs/bull';
 import { ImportJobStatusSCClient } from './import-job-status-sc.client';
 
-@Processor('queue-member-import-progress')
+@Processor('queue-file-read')
 export class MemberImportProgressProcessor {
 
   constructor(
     private jobStatusGateway: ImportJobStatusSCClient) { }
 
-  @Process()
-  async process(job: Job<{ jobId: string, total: number, completed: number }>) {
-    const jobId = job.data.jobId;
-    const total = job.data.total;
-    const completed = job.data.completed;
-    const progress = ((completed / total) * 100).toFixed(1);
-
+  @OnGlobalQueueProgress()
+  progress(_id: any, { jobId, progress }: { jobId: string, progress: number }) {
     this.jobStatusGateway.notifyProgress(jobId, +progress);
+  }
 
-    if (+progress >= 99.9) {
-      this.jobStatusGateway.notifyFinish(jobId, { progress })
-    }
+  @OnGlobalQueueCompleted()
+  complete(_id: any, result: string) {
+    this.jobStatusGateway.notifyFinish(JSON.parse(result).jobId, { progress: 100 })
   }
 }

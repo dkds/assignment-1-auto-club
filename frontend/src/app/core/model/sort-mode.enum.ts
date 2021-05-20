@@ -12,8 +12,6 @@ export enum SortMode {
     VIN_DESC = "VIN - Descending",
     MANUFACTURED_DATE_ASC = "Manufactured Date - Ascending",
     MANUFACTURED_DATE_DESC = "Manufactured Date - Descending",
-    AGE_OF_VEHICLE_ASC = "Age of Vehicle - Ascending",
-    AGE_OF_VEHICLE_DESC = "Age of Vehicle - Descending",
     CREATED_AT_ASC = "Created At - Ascending",
     CREATED_AT_DESC = "Created At - Descending",
 }

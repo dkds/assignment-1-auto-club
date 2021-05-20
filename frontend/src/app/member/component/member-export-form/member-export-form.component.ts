@@ -8,6 +8,7 @@ import { JobStatusService } from 'src/app/core/service/job-status.service';
 import { exportListRequest, exportListRequestCompleted, exportListRequestListenerEnded, exportListRequestListenerStarted, getExportCriteriaList } from 'src/app/core/state/member/member.actions';
 import { ToastService } from 'src/app/shared/service/toast.service';
 import { environment } from '../../../../environments/environment';
+import { exportCriterias, exportJobs, exportLoading } from 'src/app/core/state/member/member.selectors';
 
 @Component({
   selector: 'member-export-form',
@@ -21,7 +22,7 @@ export class MemberExportFormComponent implements OnInit, OnDestroy {
   @Output("formShown") formShownEmitter = new EventEmitter();
   @Output("formHidden") formHiddenEmitter = new EventEmitter();
 
-  criterias = this.store.select((state: any) => state.member.export.criterias);
+  criterias = this.store.select(exportCriterias);
   formSubmitted = false;
   formCollapsed = true;
   formSubmitting = false;
@@ -41,13 +42,13 @@ export class MemberExportFormComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.store.dispatch(getExportCriteriaList());
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.export.loading).subscribe((loading) => {
+      this.store.select(exportLoading).subscribe((loading) => {
         this.logger.debug('state.member.export.loading', loading);
         this.formSubmitting = loading;
       })
     );
     this.subscriptions.add(
-      this.store.select((state: any) => state.member.export.jobs as { jobId: string, listening: boolean }[])
+      this.store.select(exportJobs)
         .pipe(mergeAll(), filter(({ listening }) => !listening))
         .subscribe(({ jobId }) => {
           this.hide();
