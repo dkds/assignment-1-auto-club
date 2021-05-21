@@ -3,8 +3,6 @@ services:
 
   postgres:
     image: postgres:9.6.21-alpine
-    ports:
-      - 5432:5432
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: example
@@ -15,8 +13,6 @@ services:
 
   postgraphile:
     image: postgraphile-service
-    ports:
-      - 5000:5000
     depends_on:
       - postgres
     build:
@@ -27,8 +23,6 @@ services:
 
   redis:
     image: redis:6.2.1-alpine3.13
-    ports:
-      - 6379:6379
 
   bullboard:
     image: deadly0/bull-board:1.7.2
@@ -42,8 +36,6 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2021-03-26T00-00-41Z-35-g5cce9361b
-    ports:
-      - 9000:9000
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
@@ -55,6 +47,47 @@ services:
     image: socketcluster/socketcluster:v16.0.1
     ports:
       - 8000:8000
+
+  backend-service:
+    image: backend-service
+    ports:
+      - 3000:3000
+    depends_on:
+      - postgraphile
+      - minio
+    build:
+      context: ./backend
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      SOCKETCLUSTER_HOST: socketcluster
+      SOCKETCLUSTER_PORT: 8000
+      POSTGRAPHILE_HOST: postgraphile
+      POSTGRAPHILE_PORT: 5000
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESSKEY: minio
+      MINIO_SECRETKEY: minio123
+      MINIO_BUCKET: test
+
+  bulk-process-service:
+    image: bulk-process-service
+    depends_on:
+      - postgraphile
+      - minio
+      - backend-service
+    build:
+      context: ./bulk-process-service
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BACKEND_HOST: backend-service
+      BACKEND_PORT: 3000
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESSKEY: minio
+      MINIO_SECRETKEY: minio123
+      MINIO_BUCKET: test
 
 volumes:
   postgres:

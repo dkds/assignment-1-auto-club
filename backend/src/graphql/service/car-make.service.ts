@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { from, of } from 'rxjs';
-import { map, mergeMap, pluck, tap } from 'rxjs/operators';
+import { map, mergeMap } from 'rxjs/operators';
 import { CarMakeInput } from 'src/graphql/schema/types';
 import { ApolloService } from './apollo.service';
 import { LIST_CAR_MAKE, CREATE_CAR_MAKE, DELETE_CAR_MAKE, UPDATE_CAR_MAKE, GET_CAR_MAKE_BY_NAME } from './graphql-queries.schema';
@@ -24,7 +24,7 @@ export class CarMakeService {
     });
     return from(query)
       .pipe(
-        pluck('data', 'allCarMakes', 'nodes'),
+        map((data: any) => data.data.allCarMakes.nodes),
       );
   }
 
@@ -35,7 +35,7 @@ export class CarMakeService {
     });
     return from(query)
       .pipe(
-        pluck('data', 'allCarMakes', 'nodes'),
+        map((data: any) => data.data.allCarMakes.nodes),
         mergeMap((data) => data.length > 0 ? of(data[0]) : of(null))
       );
   }
@@ -49,26 +49,27 @@ export class CarMakeService {
     });
     return from(mutation)
       .pipe(
-        pluck('data', 'createCarMake', 'carMake'),
+        map((data: any) => data.data.createCarMake.carMake),
       );
   }
 
   getOrCreate(carMake: CarMakeInput) {
     return this.getByName(carMake.name)
       .pipe(
-        mergeMap((data) => data == null ? this.create(carMake) : of(data)))
+        mergeMap((data) => data == null ? this.create(carMake) : of(data)),
+      );
   }
 
-  update(carModel: CarMakeInput) {
+  update(carMake: CarMakeInput) {
     const mutation = this.apolloService.mutate({
       mutation: UPDATE_CAR_MAKE,
       variables: {
-        ...carModel
+        ...carMake
       }
     });
     return from(mutation)
       .pipe(
-        pluck('data', 'updateCarMakeById', 'carMake'),
+        map((data: any) => data.data.updateCarMakeById.carMake),
       );
   }
 
@@ -79,8 +80,8 @@ export class CarMakeService {
     });
     return from(mutation)
       .pipe(
-        pluck('data', 'deleteCarMakeById', 'deletedCarMakeId'),
-        map((data) => ({ deletedCarMakeId: +id })),
+        map((data: any) => data.data.deleteCarMakeById.deletedCarMakeId),
+        map(() => ({ deletedCarMakeId: +id })),
       );
   }
 }

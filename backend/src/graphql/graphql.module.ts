@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { GraphQLModule as GraphQL } from "@nestjs/graphql";
 import { CarMakeResolver } from "./resolver/car-make.resolver";
 import { CarModelResolver } from "./resolver/car-model.resolver";
@@ -19,14 +20,18 @@ import { MemberService } from "./service/member.service";
     CarMakeResolver,
   ],
   imports: [
-    GraphQL.forRoot({
-      debug: true,
-      playground: true,
-      typePaths: ['./src/graphql/**/*.gql'],
-      definitions: {
-        path: './src/graphql/schema/types.ts',
-        outputAs: 'class',
-      },
+    GraphQL.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        debug: true,
+        playground: true,
+        typePaths: [`${process.cwd()}/${configService.get('GRAPHQL_SCHEMA_PATH')}/*.gql`],
+        definitions: {
+          path: `${configService.get('GRAPHQL_SCHEMA_PATH')}/types.ts`,
+          outputAs: 'class',
+        },
+      }),
+      inject: [ConfigService],
     }),
   ],
   exports: [
