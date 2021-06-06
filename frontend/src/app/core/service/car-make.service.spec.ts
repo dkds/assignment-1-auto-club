@@ -1,9 +1,8 @@
 import { TestBed } from "@angular/core/testing";
 import { NGXLogger } from "ngx-logger";
 import { ApolloTestingModule, ApolloTestingController } from 'apollo-angular/testing';
-import { CREATE_CAR_MAKE, DELETE_CAR_MAKE, LIST_CAR_MAKE, UPDATE_CAR_MAKE } from "./graphql.schema";
+import { CREATE_CAR_MAKE, DELETE_CAR_MAKE, LIST_CAR_MAKE, UPDATE_CAR_MAKE } from "../config/graphql.queries";
 import { CarMakeService } from "./car-make.service";
-import { skip } from "rxjs/operators";
 import { CarMake } from "../model/car-make.model";
 
 describe("CarMakeService", () => {
@@ -33,17 +32,14 @@ describe("CarMakeService", () => {
       { id: 2, name: 'Car make 3', }
     ];
 
-    service.loadCarMakes();
-    const op = apolloController.expectOne(LIST_CAR_MAKE);
-    op.flush({
-      data: { carMakes },
-    });
     service.getCarMakes()
-      .pipe(skip(1))
       .subscribe((result) => {
         expect(result).toEqual(carMakes.map(CarMake.fromObject));
         done();
       });
+    apolloController.expectOne(LIST_CAR_MAKE).flush({
+      data: { carMakes },
+    });
     apolloController.verify();
   });
 

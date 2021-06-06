@@ -6,12 +6,12 @@ import { Store } from '@ngrx/store';
 import { DateTime } from 'luxon';
 import { Observable, Subscription } from 'rxjs';
 import { CarModel } from 'src/app/core/model/car-model.model';
-import { listLoad } from 'src/app/core/state/car-model/car-model.actions';
-import { save } from 'src/app/core/state/member/member.actions';
+import { MemberActions } from 'src/app/core/state/member/member.actions';
 import { MemberForm } from '../../../core/model/member-form.model';
 import { Member } from '../../../core/model/member.model';
-import { saveLoading } from 'src/app/core/state/member/member.selectors';
-import { listCarModels } from 'src/app/core/state/car-model/car-model.selectors';
+import { MemberSelectors } from 'src/app/core/state/member/member.selectors';
+import { CarModelActions } from 'src/app/core/state/car-model/car-model.actions';
+import { CarModelSelectors } from 'src/app/core/state/car-model/car-model.selectors';
 
 @Component({
   selector: 'member-form',
@@ -24,12 +24,13 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   @Output("formShown") formShownEmitter = new EventEmitter();
   @Output("formHidden") formHiddenEmitter = new EventEmitter();
 
-  carModelList: Observable<CarModel[]> = this.store.select(listCarModels);
+  carModelList$: Observable<CarModel[]> = this.store.select(CarModelSelectors.listCarModels);
+  memberSaveLoading$: Observable<boolean> = this.store.select(MemberSelectors.saveLoading);
+
   formSubmitted = false;
   formCollapsed = true;
-  formSubmitting = false;
   collapsed = true;
-  memberForm = this.formBuilder.group({
+  memberForm = this.fb.group({
     id: [0],
     firstName: ['', Validators.required],
     lastName: ['', Validators.required],
@@ -43,19 +44,20 @@ export class MemberFormComponent implements OnInit, OnDestroy {
   constructor(
     private logger: NGXLogger,
     private store: Store,
-    private formBuilder: FormBuilder) { }
+    private fb: FormBuilder) { }
 
   get form() {
     return this.memberForm.controls;
   }
 
   ngOnInit(): void {
-    this.store.dispatch(listLoad());
+
+    this.store.dispatch(CarModelActions.listLoad());
+
     this.subscriptions.add(
-      this.store.select(saveLoading).subscribe((loading) => {
-        this.logger.debug("state.member.save.loading", loading);
-        this.formSubmitting = loading;
-        if (!loading) {
+      this.store.select(MemberSelectors.changeFinished).subscribe((finished) => {
+        this.logger.debug("state.member.changeFinished", finished);
+        if (finished) {
           this.hide();
         }
       })
@@ -68,9 +70,6 @@ export class MemberFormComponent implements OnInit, OnDestroy {
 
   onMemberFormSubmit() {
     this.logger.debug(this.memberForm.value);
-    if (this.formSubmitting) {
-      return;
-    }
     this.formSubmitted = true;
     if (this.memberForm.valid) {
 
@@ -84,7 +83,7 @@ export class MemberFormComponent implements OnInit, OnDestroy {
         mfd: DateTime.fromObject(this.memberForm.value.mfd).toISODate()
       } as Member;
 
-      this.store.dispatch(save({ member }));
+      this.store.dispatch(MemberActions.save({ member }));
     }
   }
 

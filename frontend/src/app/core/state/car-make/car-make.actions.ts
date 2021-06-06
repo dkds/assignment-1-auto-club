@@ -1,48 +1,54 @@
 import { createAction, props } from '@ngrx/store';
 import { CarMake } from '../../model/car-make.model';
 
-export const listLoad = createAction(
+export class CarMakeActions {
+
+
+
+  static listLoad = createAction(
     '[Car Make List/API] Load'
-);
+  );
 
-export const listReload = createAction(
-    '[Car Make List/API] Reload'
-);
-
-export const listLoadSuccess = createAction(
+  static listLoadSuccess = createAction(
     '[Car Make List/API] Load Success',
     props<{ carMakes: CarMake[] }>()
-);
+  );
 
-export const listLoadError = createAction(
+  static listLoadError = createAction(
     '[Car Make List/API] Load Error',
     props<{ error: string }>()
-);
+  );
 
-export const remove = createAction(
+
+
+  static remove = createAction(
     '[Car Make Delete/API] Delete',
-    props<{ id: number }>()
-);
+    props<{ carMake: CarMake }>()
+  );
 
-export const removeSuccess = createAction(
+  static removeSuccess = createAction(
     '[Car Make Delete/API] Delete Success'
-);
+  );
 
-export const removeError = createAction(
+  static removeError = createAction(
     '[Car Make Delete/API] Delete Error',
     props<{ error: string }>()
-);
+  );
 
-export const save = createAction(
+
+
+  static save = createAction(
     '[Car Make Save/API] Save',
     props<{ carMake: CarMake }>()
-);
+  );
 
-export const saveSuccess = createAction(
+  static saveSuccess = createAction(
     '[Car Make Save/API] Save Success'
-);
+  );
 
-export const saveError = createAction(
+  static saveError = createAction(
     '[Car Make Save/API] Save Error',
     props<{ error: string }>()
-);
+  );
+}
+

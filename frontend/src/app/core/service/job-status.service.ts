@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { NGXLogger } from "ngx-logger";
 import { Observable } from 'rxjs';
 import { Store } from '@ngrx/store';
-import { exportListRequestCompleted, importListRequestCompleted } from '../state/member/member.actions';
+import { MemberActions } from '../state/member/member.actions';
 import { create } from 'socketcluster-client';
 import { environment } from '../../../environments/environment';
 
@@ -24,17 +24,19 @@ export class JobStatusService {
     const progress = new Observable((observer) => {
       (async () => {
         for await (let data of channelProgress) {
+          this.logger.debug('job-listener progress update', data);
           observer.next(data);
         }
       })();
       (async () => {
         for await (let { } of channelFinish) {
+          this.logger.debug('job-listener completed');
           observer.complete();
           if (type == 'import') {
-            this.store.dispatch(importListRequestCompleted({ jobId }));
+            this.store.dispatch(MemberActions.importListRequestCompleted({ jobId }));
           }
           if (type == 'export') {
-            this.store.dispatch(exportListRequestCompleted({ jobId }));
+            this.store.dispatch(MemberActions.exportListRequestCompleted({ jobId }));
           }
           this.logger.debug('job-listener completed', jobId);
           socket.disconnect();
@@ -42,6 +44,12 @@ export class JobStatusService {
         }
       })();
     });
+    if (type == 'import') {
+      this.store.dispatch(MemberActions.importListRequestListenerStarted({ jobId }));
+    }
+    if (type == 'export') {
+      this.store.dispatch(MemberActions.exportListRequestListenerStarted({ jobId }));
+    }
     return progress;
   }
 }

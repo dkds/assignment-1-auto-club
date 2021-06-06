@@ -2,14 +2,18 @@ import { ComponentFixture, TestBed, waitForAsync } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { By } from "@angular/platform-browser";
 import { NgbCollapseModule } from "@ng-bootstrap/ng-bootstrap";
+import { EffectsRootModule } from "@ngrx/effects";
 import { MemoizedSelector, DefaultProjectorFn } from "@ngrx/store";
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
 import { NGXLogger } from "ngx-logger";
-import { CarMake } from "src/app/core/model/car-make.model";
-import { CarModel } from "src/app/core/model/car-model.model";
-import { listCarMakes } from "src/app/core/state/car-make/car-make.selectors";
-import { remove, save } from "src/app/core/state/car-model/car-model.actions";
-import { listCarModels, removeLoading, saveLoading } from "src/app/core/state/car-model/car-model.selectors";
+import { CarMake } from "../../core/model/car-make.model";
+import { CarModel } from "../../core/model/car-model.model";
+import { carMakeInitialState } from "../../core/state/car-make/car-make.reducers";
+import { CarMakeSelectors } from "../../core/state/car-make/car-make.selectors";
+import { CarModelActions } from "../../core/state/car-model/car-model.actions";
+import { carModelInitialState } from "../../core/state/car-model/car-model.reducers";
+import { CarModelSelectors } from "../../core/state/car-model/car-model.selectors";
+import { SharedModule } from "../../shared/shared.module";
 import { CarModelComponent } from "./car-model-main.component";
 
 describe("CarModelComponent", () => {
@@ -29,13 +33,21 @@ describe("CarModelComponent", () => {
 
   beforeEach(waitForAsync(() => {
     const logMock = jasmine.createSpyObj('NGXLogger', ['debug']);
+    const effects = jasmine.createSpy('EffectsRootModule');
     TestBed.configureTestingModule({
       providers: [
-        provideMockStore(),
+        provideMockStore({
+          initialState: {
+            carMake: carMakeInitialState,
+            carModel: carModelInitialState,
+          }
+        }),
         { provide: NGXLogger, useValue: logMock },
+        { provide: EffectsRootModule, useValue: effects },
       ],
       declarations: [CarModelComponent],
       imports: [
+        SharedModule,
         ReactiveFormsModule,
         NgbCollapseModule,
       ],
@@ -44,28 +56,19 @@ describe("CarModelComponent", () => {
 
   beforeEach(() => {
     store = TestBed.inject(MockStore);
-    listSelector = store.overrideSelector(
-      listCarModels,
-      initialCarModelList
-    );
-    store.overrideSelector(
-      listCarMakes,
-      initialCarMakeList
-    );
-    store.overrideSelector(
-      saveLoading,
-      false
-    );
-    store.overrideSelector(
-      removeLoading,
-      false
-    );
+
+    listSelector = store.overrideSelector(CarModelSelectors.listCarModels, initialCarModelList);
+    store.overrideSelector(CarMakeSelectors.listCarMakes, initialCarMakeList);
+    store.overrideSelector(CarModelSelectors.saveLoading, false);
+    store.overrideSelector(CarModelSelectors.removeLoading, false);
+    store.overrideSelector(CarModelSelectors.changeFinished, false);
+    store.overrideSelector(CarModelSelectors.changeError, false);
+
     fixture = TestBed.createComponent(CarModelComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    spyOn(store, 'dispatch').and.callFake(() => {
-      console.log("dispached");
-    });
+
+    spyOn(store, 'dispatch').and.callFake(() => console.log("dispached"));
     spyOn(window, "confirm").and.returnValue(true);
   });
 
@@ -84,9 +87,7 @@ describe("CarModelComponent", () => {
   });
 
   it('form submit should fail on invalid form', () => {
-    const form = component.carModelForm;
-    const nameInput = form.controls.name;
-    nameInput.setValue(null);
+    component.carModelForm.controls.name.setValue(null);
 
     component.onCarModelFormSubmit();
     expect(store.dispatch).not.toHaveBeenCalled();
@@ -106,7 +107,7 @@ describe("CarModelComponent", () => {
 
     component.onCarModelFormSubmit();
     expect(store.dispatch).toHaveBeenCalledWith(
-      save({ carModel })
+      CarModelActions.save({ carModel })
     );
   });
 
@@ -157,7 +158,7 @@ describe("CarModelComponent", () => {
 
     item.query(By.css('button.btn.btn-delete')).nativeElement.click();
     expect(store.dispatch).toHaveBeenCalledWith(
-      remove({ id: 1 })
+      CarModelActions.remove({ carModel: { ...initialCarModelList[0] } })
     );
   });
 });

@@ -1,45 +1,90 @@
-import { createSelector } from '@ngrx/store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { MemberExportState, MemberImportState, MemberListState, MemberRemoveState, MemberSaveState } from './member.state';
 
-export const selectMemberList = (state: any) => state.member.list;
-export const selectMemberSave = (state: any) => state.member.save;
-export const selectMemberRemove = (state: any) => state.member.remove;
-export const selectMemberImport = (state: any) => state.member.import;
-export const selectMemberExport = (state: any) => state.member.export;
+export class MemberSelectors {
 
-export const listMembers = createSelector(
-  selectMemberList,
-  (state: MemberListState) => state.members
-);
-export const listTotalCount = createSelector(
-  selectMemberList,
-  (state: MemberListState) => state.totalCount
-);
-export const removeLoading = createSelector(
-  selectMemberRemove,
-  (state: MemberRemoveState) => state.loading
-);
-export const saveLoading = createSelector(
-  selectMemberSave,
-  (state: MemberSaveState) => state.loading
-);
-export const importLoading = createSelector(
-  selectMemberImport,
-  (state: MemberImportState) => state.loading
-);
-export const importJobs = createSelector(
-  selectMemberImport,
-  (state: MemberImportState) => state.jobs
-);
-export const exportLoading = createSelector(
-  selectMemberExport,
-  (state: MemberExportState) => state.loading
-);
-export const exportJobs = createSelector(
-  selectMemberExport,
-  (state: MemberExportState) => state.jobs
-);
-export const exportCriterias = createSelector(
-  selectMemberExport,
-  (state: MemberExportState) => state.criterias
-);
+  private static selectCarModel = createFeatureSelector('member');
+
+  private static selectMemberList = createSelector(MemberSelectors.selectCarModel, (state: any) => state['list']);
+  private static selectMemberSave = createSelector(MemberSelectors.selectCarModel, (state: any) => state['save']);
+  private static selectMemberRemove = createSelector(MemberSelectors.selectCarModel, (state: any) => state['remove']);
+  private static selectMemberImport = createSelector(MemberSelectors.selectCarModel, (state: any) => state['import']);
+  private static selectMemberExport = createSelector(MemberSelectors.selectCarModel, (state: any) => state['export']);
+
+
+  static listMembers = createSelector(
+    MemberSelectors.selectMemberList,
+    (state: MemberListState) => state.members
+  );
+  static listMembersVariables = createSelector(
+    MemberSelectors.selectMemberList,
+    (state: MemberListState) => ({
+      first: state.pageSize,
+      offset: (state.currentPage - 1) * state.pageSize,
+      orderBy: state.sortMode,
+      query: state.searchQuery,
+    })
+  );
+  static listPageInfo = createSelector(
+    MemberSelectors.selectMemberList,
+    (state: MemberListState) => ({
+      pageSize: state.pageSize,
+      totalCount: state.totalCount,
+      currentPage: state.currentPage
+    })
+  );
+
+
+  static removeLoading = createSelector(
+    MemberSelectors.selectMemberRemove,
+    (state: MemberRemoveState) => state.requestState == 'loading'
+  );
+  static saveLoading = createSelector(
+    MemberSelectors.selectMemberSave,
+    (state: MemberSaveState) => state.requestState == 'loading'
+  );
+
+
+  static importLoading = createSelector(
+    MemberSelectors.selectMemberImport,
+    (state: MemberImportState) => state.requestState == 'loading'
+  );
+  static importJobs = createSelector(
+    MemberSelectors.selectMemberImport,
+    (state: MemberImportState) => state.jobs
+  );
+
+
+  static exportLoading = createSelector(
+    MemberSelectors.selectMemberExport,
+    (state: MemberExportState) => state.requestState == 'loading'
+  );
+  static exportJobs = createSelector(
+    MemberSelectors.selectMemberExport,
+    (state: MemberExportState) => state.jobs
+  );
+  static exportCriterias = createSelector(
+    MemberSelectors.selectMemberExport,
+    (state: MemberExportState) => state.criterias
+  );
+
+
+  static changeError = createSelector(
+    MemberSelectors.selectMemberSave,
+    MemberSelectors.selectMemberRemove,
+    (saveState: MemberSaveState, removeState: MemberRemoveState) => (
+      saveState.requestState == 'failed' ? saveState.requestError : false ||
+        removeState.requestState == 'failed' ? removeState.requestError : false
+    )
+  );
+  static changeFinished = createSelector(
+    MemberSelectors.selectMemberSave,
+    MemberSelectors.selectMemberRemove,
+    (saveState: MemberSaveState, removeState: MemberRemoveState) => (
+      saveState.requestState == 'succeeded' ||
+      saveState.requestState == 'failed' ||
+      removeState.requestState == 'succeeded' ||
+      removeState.requestState == 'failed'
+    )
+  );
+}

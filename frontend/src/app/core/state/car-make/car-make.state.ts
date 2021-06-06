@@ -1,19 +1,19 @@
 import { CarMake } from "../../model/car-make.model";
 
 export interface CarMakeListState {
-    carMakes: CarMake[];
-    error: string | null;
-    loading: boolean;
+  carMakes: CarMake[];
+  requestState: 'idle' | 'loading' | 'succeeded' | 'failed';
+  requestError: string | null;
 }
 
 export interface CarMakeRemoveState {
-    id: number | null,
-    error: string | null,
-    loading: boolean,
+  id: number | null;
+  requestState: 'idle' | 'loading' | 'succeeded' | 'failed';
+  requestError: string | null;
 }
 
 export interface CarMakeSaveState {
-    carMake: CarMake | null,
-    error: string | null,
-    loading: boolean,
+  carMake: CarMake | null;
+  requestState: 'idle' | 'loading' | 'succeeded' | 'failed';
+  requestError: string | null;
 }

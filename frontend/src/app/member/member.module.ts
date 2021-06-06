@@ -13,19 +13,23 @@ import { MemberComponent } from './component/member-main/member-main.component';
 import { MemberFormComponent } from './component/member-form/member-form.component';
 import { MemberImportFormComponent } from './component/member-import-form/member-import-form.component';
 import { MemberExportFormComponent } from './component/member-export-form/member-export-form.component';
-import { memberListReducer, memberRemoveReducer, memberImportReducer, memberSaveReducer, memberExportReducer } from '../core/state/member/member.reducers';
+
+import { CarModelResolverService } from '../core/service/car-model-resolver.service';
+
+import { memberReducers } from '../core/state/member/member.reducers';
 import { MemberEffects } from '../core/state/member/member.effects';
+
 
 const routes: Routes = [
   {
     path: '',
-    component: MemberComponent
+    component: MemberComponent,
+    resolve: { carModel: CarModelResolverService }
   }
 ];
 
 @NgModule({
   imports: [
-    RouterModule.forChild(routes),
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
@@ -35,14 +39,9 @@ const routes: Routes = [
     NgbDatepickerModule,
     NgbPaginationModule,
     SharedModule,
+    RouterModule.forChild(routes),
     EffectsModule.forFeature([MemberEffects]),
-    StoreModule.forFeature('member', {
-      list: memberListReducer,
-      save: memberSaveReducer,
-      remove: memberRemoveReducer,
-      import: memberImportReducer,
-      export: memberExportReducer,
-    })
+    StoreModule.forFeature('member', memberReducers)
   ],
   declarations: [
     MemberComponent,

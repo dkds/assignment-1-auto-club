@@ -62,12 +62,12 @@
               <div class="row">
                 <div class="col-12 mb-4">
                   <select class="form-control form-control-sm" id="sortMode" (change)="onSortModeChange($event)">
-                    <option *ngFor="let sortMode of sortModes" [value]="sortMode.name">{{sortMode.text}}</option>
+                    <option *ngFor="let sortMode of sortModes$ | async" [value]="sortMode.name">{{sortMode.text}}</option>
                   </select>
                 </div>
               </div>
 
-              <div class="row" *ngIf="(memberList | async) as members; else loading">
+              <div class="row" *ngIf="(memberList$ | async) as members; else loading">
                 <div class="col-12 item-container">
 
                   <label *ngIf="!members.length">No records found</label>
@@ -81,10 +81,6 @@
                             <h6 class="mb-1">{{member.firstName + " " + member.lastName}}</h6>
                           </div>
                           <div class="float-left pl-1 pt-2">
-                            <!-- <p class="mb-1">Email: {{member.email}}</p>
-                            <p class="mb-1">Car: {{member?.carModel?.carMake?.name + " " + member.carModel?.name}}</p>
-                            <p class="mb-1">VIN: {{member?.vin}}</p>
-                            <p class="mb-1">MFD: {{member?.mfd | date: 'YYYY-MM-dd'}}</p> -->
                             <p style="font-size: 0.9em;">
                               Email: {{member.email}} <br>
                               Car: {{member?.carModel?.carMake?.name + " " + member.carModel?.name}} <br>
@@ -96,14 +92,19 @@
                         <div class="col-4">
                           <div class="member-info-controls">
                             <div class="btn-group" role="group">
-                              <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="listProcessing"
-                                title="Edit" (click)="onItemEditClick($event, member)">
+
+                              <button type="button" class="btn btn-sm btn-outline-primary"
+                                [disabled]="memberSaveLoading$ | async" title="Edit"
+                                (click)="onItemEditClick($event, member)">
                                 <i class="bi bi-pencil"></i>
                               </button>
-                              <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="listProcessing"
-                                title="Delete" (click)="onItemDeleteClick($event, member)">
+
+                              <button type="button" class="btn btn-sm btn-outline-danger"
+                                [disabled]="memberRemoveLoading$ | async" title="Delete"
+                                (click)="onItemDeleteClick($event, member)">
                                 <i class="bi bi-trash"></i>
                               </button>
+
                             </div>
                           </div>
                         </div>
@@ -113,12 +114,15 @@
 
                 </div>
               </div>
+
               <ng-template #loading>
                 <label>Loading...</label>
               </ng-template>
 
-              <ngb-pagination class="d-flex justify-content-end pr-3 pt-3" *ngIf="totalMemberSize | async as total"
-                [collectionSize]="total" [pageSize]="pageSize" [maxSize]="6" (pageChange)="onPageChange($event)">
+              <ngb-pagination class="d-flex justify-content-end pr-3 pt-3"
+                *ngIf="memberListPageInfo$ | async as pageInfo" [collectionSize]="pageInfo.totalCount"
+                [page]="pageInfo.currentPage" [pageSize]="pageInfo.pageSize" [maxSize]="6"
+                (pageChange)="onPageChange($event)">
               </ngb-pagination>
 
             </div>

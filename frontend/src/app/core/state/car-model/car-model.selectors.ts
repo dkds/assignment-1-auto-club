@@ -1,19 +1,46 @@
-import { createSelector } from '@ngrx/store';
+import { createFeatureSelector, createSelector } from '@ngrx/store';
 import { CarModelListState, CarModelRemoveState, CarModelSaveState } from './car-model.state';
 
-export const selectCarModelList = (state: any) => state.carModel.list;
-export const selectCarModelSave = (state: any) => state.carModel.save;
-export const selectCarModelRemove = (state: any) => state.carModel.remove;
+export class CarModelSelectors {
 
-export const listCarModels = createSelector(
-  selectCarModelList,
-  (state: CarModelListState) => state.carModels
-);
-export const saveLoading = createSelector(
-  selectCarModelSave,
-  (state: CarModelSaveState) => state.loading
-);
-export const removeLoading = createSelector(
-  selectCarModelRemove,
-  (state: CarModelRemoveState) => state.loading
-);
+  private static selectCarModel = createFeatureSelector('carModel');
+
+  private static selectCarModelList = createSelector(CarModelSelectors.selectCarModel, (state: any) => state['list']);
+  private static selectCarModelSave = createSelector(CarModelSelectors.selectCarModel, (state: any) => state['save']);
+  private static selectCarModelRemove = createSelector(CarModelSelectors.selectCarModel, (state: any) => state['remove']);
+
+
+  static listCarModels = createSelector(
+    CarModelSelectors.selectCarModelList,
+    (state: CarModelListState) => state.carModels
+  );
+
+
+  static saveLoading = createSelector(
+    CarModelSelectors.selectCarModelSave,
+    (state: CarModelSaveState) => state.requestState == 'loading'
+  );
+  static removeLoading = createSelector(
+    CarModelSelectors.selectCarModelRemove,
+    (state: CarModelRemoveState) => state.requestState == 'loading'
+  );
+
+  static changeError = createSelector(
+    CarModelSelectors.selectCarModelRemove,
+    CarModelSelectors.selectCarModelSave,
+    (saveState: CarModelSaveState, removeState: CarModelRemoveState) => (
+      saveState.requestState == 'failed' ? saveState.requestError : false ||
+        removeState.requestState == 'failed' ? removeState.requestError : false
+    )
+  );
+  static changeFinished = createSelector(
+    CarModelSelectors.selectCarModelRemove,
+    CarModelSelectors.selectCarModelSave,
+    (saveState: CarModelSaveState, removeState: CarModelRemoveState) => (
+      saveState.requestState == 'succeeded' ||
+      saveState.requestState == 'failed' ||
+      removeState.requestState == 'succeeded' ||
+      removeState.requestState == 'failed'
+    )
+  );
+}

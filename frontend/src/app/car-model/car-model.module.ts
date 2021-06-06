@@ -5,12 +5,24 @@ import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { GraphQLModule } from '../graphql.module';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
-import { CarMakeModule } from '../car-make/car-make.module';
+import { RouterModule, Routes } from '@angular/router';
+import { SharedModule } from '../shared/shared.module';
 
 import { CarModelComponent } from './component/car-model-main.component';
-import { carModelListReducer, carModelRemoveReducer, carModelSaveReducer } from '../core/state/car-model/car-model.reducers';
+
+import { CarMakeResolverService } from '../core/service/car-make-resolver.service';
+
+import { carModelReducers } from '../core/state/car-model/car-model.reducers';
 import { CarModelEffects } from '../core/state/car-model/car-model.effects';
 
+
+const routes: Routes = [
+  {
+    path: '',
+    component: CarModelComponent,
+    resolve: { carMake: CarMakeResolverService }
+  }
+];
 
 @NgModule({
   imports: [
@@ -18,13 +30,10 @@ import { CarModelEffects } from '../core/state/car-model/car-model.effects';
     ReactiveFormsModule,
     NgbCollapseModule,
     GraphQLModule,
-    CarMakeModule,
+    SharedModule,
+    RouterModule.forChild(routes),
     EffectsModule.forFeature([CarModelEffects]),
-    StoreModule.forFeature('carModel', {
-      list: carModelListReducer,
-      save: carModelSaveReducer,
-      remove: carModelRemoveReducer,
-    })
+    StoreModule.forFeature('carModel', carModelReducers)
   ],
   declarations: [
     CarModelComponent

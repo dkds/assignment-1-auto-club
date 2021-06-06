@@ -5,10 +5,12 @@ import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { Observable, Subscription } from 'rxjs';
 import { CarMake } from '../../core/model/car-make.model';
-import { listLoad, remove, save } from '../../core/state/car-model/car-model.actions';
+import { CarModelActions } from '../../core/state/car-model/car-model.actions';
 import { CarModel } from '../../core/model/car-model.model';
-import { listCarMakes } from '../../core/state/car-make/car-make.selectors';
-import { listCarModels, removeLoading, saveLoading } from '../../core/state/car-model/car-model.selectors';
+import { CarModelSelectors } from '../../core/state/car-model/car-model.selectors';
+import { CarMakeSelectors } from 'src/app/core/state/car-make/car-make.selectors';
+import { ToastService } from 'src/app/shared/service/toast.service';
+import { CarMakeActions } from 'src/app/core/state/car-make/car-make.actions';
 
 @Component({
   selector: 'car-model-main',
@@ -19,8 +21,11 @@ export class CarModelComponent implements OnInit, OnDestroy {
 
   @ViewChild("carModelFormContainer") carModelFormContainer!: NgbCollapse;
 
-  carModelList: Observable<CarModel[]> = this.store.select(listCarModels);
-  carMakeList: Observable<CarMake[]> = this.store.select(listCarMakes);
+  carMakeList$: Observable<CarMake[]> = this.store.select(CarMakeSelectors.listCarMakes);
+  carModelList$: Observable<CarModel[]> = this.store.select(CarModelSelectors.listCarModels);
+  carModelSaveLoading$: Observable<boolean> = this.store.select(CarModelSelectors.saveLoading);
+  carModelRemoveLoading$: Observable<boolean> = this.store.select(CarModelSelectors.removeLoading);
+
   formMode: string = "New";
   carModelFormSubmitted = false;
   carModelFormCollapsed = true;
@@ -30,11 +35,12 @@ export class CarModelComponent implements OnInit, OnDestroy {
     name: ['', Validators.required],
     carMakeId: ['', Validators.required],
   });
-  subscriptions: Subscription = new Subscription();
+  private subscriptions: Subscription = new Subscription();
 
   constructor(
     private logger: NGXLogger,
     private store: Store,
+    private toastService: ToastService,
     private fb: FormBuilder) {
   }
 
@@ -42,34 +48,25 @@ export class CarModelComponent implements OnInit, OnDestroy {
     return this.carModelForm.controls;
   }
 
-  private showCarModelForm() {
-    if (this.carModelFormContainer?.collapsed) {
-      this.carModelFormContainer?.toggle();
-    }
-  }
-
-  private hideCarModelForm() {
-    if (!this.carModelFormContainer?.collapsed) {
-      this.carModelFormContainer?.toggle();
-    }
-  }
-
   ngOnInit(): void {
-    this.store.dispatch(listLoad());
+
+    this.store.dispatch(CarMakeActions.listLoad());
+    this.store.dispatch(CarModelActions.listLoad());
+
     this.subscriptions.add(
-      this.store.select(saveLoading).subscribe((loading) => {
-        this.logger.debug("state.carModel.save.loading", loading);
-        this.carModelFormSubmitting = loading;
-        if (!loading) {
+      this.store.select(CarModelSelectors.changeFinished).subscribe((finished) => {
+        this.logger.debug("state.carModel.changeFinished", finished);
+        if (finished) {
           this.hideCarModelForm();
         }
       })
     );
+
     this.subscriptions.add(
-      this.store.select(removeLoading).subscribe((loading) => {
-        this.carModelFormSubmitting = loading;
-        if (!loading) {
-          this.hideCarModelForm();
+      this.store.select(CarModelSelectors.changeError).subscribe((error) => {
+        this.logger.debug("state.carModel.changeError", error);
+        if (error) {
+          this.toastService.showText(error, { classname: 'bg-danger text-light', autohide: true, autohideDelay: 8000 });
         }
       })
     );
@@ -81,9 +78,6 @@ export class CarModelComponent implements OnInit, OnDestroy {
 
   onCarModelFormSubmit() {
     this.logger.debug(this.carModelForm.value);
-    if (this.carModelFormSubmitting) {
-      return;
-    }
     this.carModelFormSubmitted = true;
     if (this.carModelForm.valid) {
 
@@ -92,12 +86,14 @@ export class CarModelComponent implements OnInit, OnDestroy {
         name: this.carModelForm.value.name,
         carMake: { id: this.carModelForm.value.carMakeId },
       } as CarModel;
-      this.store.dispatch(save({ carModel }));
+
+      this.store.dispatch(CarModelActions.save({ carModel }));
     }
   }
 
   onItemEditClick(e: Event, carModel: CarModel) {
     e.preventDefault();
+
     this.carModelForm.reset();
     this.carModelForm.setValue({
       id: carModel?.id,
@@ -109,13 +105,11 @@ export class CarModelComponent implements OnInit, OnDestroy {
 
   onItemDeleteClick(e: Event, carModel: CarModel) {
     e.preventDefault();
-    if (this.carModelFormSubmitting) {
-      return;
-    }
+
     this.logger.debug("delete", carModel);
     if (confirm(`Are you sure you want to delete '${carModel.name}'`)) {
-      this.form.name.disable();
-      this.store.dispatch(remove({ id: carModel.id }));
+
+      this.store.dispatch(CarModelActions.remove({ carModel: { ...carModel } }));
     }
   }
 
@@ -128,5 +122,17 @@ export class CarModelComponent implements OnInit, OnDestroy {
     this.carModelForm.reset();
     this.carModelFormSubmitted = false;
     this.formMode = "New";
+  }
+
+  private showCarModelForm() {
+    if (this.carModelFormContainer?.collapsed) {
+      this.carModelFormContainer?.toggle();
+    }
+  }
+
+  private hideCarModelForm() {
+    if (!this.carModelFormContainer?.collapsed) {
+      this.carModelFormContainer?.toggle();
+    }
   }
 }

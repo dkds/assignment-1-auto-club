@@ -6,9 +6,9 @@ import { Subscription } from 'rxjs';
 import { JobStatusService } from '../../../core/service/job-status.service';
 import { ToastService } from '../../../shared/service/toast.service';
 import { Store } from '@ngrx/store';
-import { importListRequest, importListRequestListenerEnded, importListRequestListenerStarted, listLoad } from '../../../core/state/member/member.actions';
+import { MemberActions } from '../../../core/state/member/member.actions';
 import { filter, mergeAll, tap } from 'rxjs/operators';
-import { importJobs, importLoading } from 'src/app/core/state/member/member.selectors';
+import { MemberSelectors } from 'src/app/core/state/member/member.selectors';
 
 @Component({
   selector: 'member-import-form',
@@ -18,33 +18,32 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
 
   @ViewChild("memberImportFormContainer") memberImportFormContainer!: NgbCollapse;
 
+  memberImportLoading$ = this.store.select(MemberSelectors.importLoading);
+
   fileName?: string = "Choose file";
   formSubmitted = false;
-  formSubmitting = false;
   collapsed = true;
   importForm = this.fb.group({
     file: ['', Validators.required],
     fileSource: ['', Validators.required]
   });
-  subscriptions: Subscription = new Subscription();
+  private subscriptions: Subscription = new Subscription();
 
   constructor(
-    private logger: NGXLogger,
-    private store: Store,
-    private toastService: ToastService,
     private fb: FormBuilder,
+    private store: Store,
+    private logger: NGXLogger,
+    private toastService: ToastService,
     private jobStatus: JobStatusService) { }
 
   ngOnInit(): void {
+
     this.subscriptions.add(
-      this.store.select(importLoading).subscribe((loading) => {
-        this.logger.debug('state.member.import.loading', loading);
-        this.formSubmitting = loading;
-      })
-    );
-    this.subscriptions.add(
-      this.store.select(importJobs)
-        .pipe(mergeAll(), filter(({ listening }) => !listening))
+      this.store.select(MemberSelectors.importJobs)
+        .pipe(
+          mergeAll(),
+          filter(({ listening }) => !listening)
+        )
         .subscribe(({ jobId }) => {
           this.hideMemberImportForm();
 
@@ -77,18 +76,17 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
                   text: 'import compelted',
                   value: 100
                 };
-                this.store.dispatch(listLoad());
               }
             })
           );
-          this.store.dispatch(importListRequestListenerStarted({ jobId }));
         })
     );
+
   }
 
   ngOnDestroy(): void {
     this.subscriptions.unsubscribe();
-    this.store.dispatch(importListRequestListenerEnded());
+    this.store.dispatch(MemberActions.importListRequestListenerEnded());
     this.toastService.removeAll();
   }
 
@@ -98,14 +96,11 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
 
   onFormSubmit() {
     this.logger.debug(this.importForm.value);
-    if (this.formSubmitting) {
-      return;
-    }
     this.formSubmitted = true;
     if (this.importForm.valid) {
       this.logger.debug('file submit', this.importForm.value.fileSource);
 
-      this.store.dispatch(importListRequest({ fileSource: this.importForm.value.fileSource }));
+      this.store.dispatch(MemberActions.importListRequest({ fileSource: this.importForm.value.fileSource }));
     }
   }
 
@@ -125,14 +120,12 @@ export class MemberImportFormComponent implements OnInit, OnDestroy {
 
   onFormShown() {
     this.formSubmitted = false;
-    this.formSubmitting = false;
   }
 
   onFormHidden() {
     this.importForm.reset();
     this.fileName = "Choose file";
     this.formSubmitted = false;
-    this.formSubmitting = false;
   }
 
   private hideMemberImportForm() {

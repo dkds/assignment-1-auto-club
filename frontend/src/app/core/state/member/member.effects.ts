@@ -1,125 +1,104 @@
 import { Injectable } from "@angular/core";
 import { createEffect, ofType, Actions } from "@ngrx/effects";
-import { of, from } from "rxjs";
-import { mergeMap, map, catchError, filter } from "rxjs/operators";
+import { Store } from "@ngrx/store";
+import { of } from "rxjs";
+import { mergeMap, map, catchError, switchMap, tap, withLatestFrom } from "rxjs/operators";
+import { MemberPage } from "../../model/member-page.model";
 import { MemberService } from "../../service/member.service";
-import { getExportCriteriaList, exportListRequest, exportListRequestError, exportListRequestSuccess, importListRequest, importListRequestError, importListRequestSuccess, listLoad, listLoadError, listLoadSuccess, save, saveError, saveSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listNavigate, listSort, listSearch, remove, removeSuccess, removeError } from "./member.actions";
+import { MemberActions } from "./member.actions";
+import { MemberSelectors } from "./member.selectors";
 
 @Injectable()
 export class MemberEffects {
 
-  loadMembers = createEffect(() => this.actions.pipe(
-    ofType(listLoad),
-    mergeMap(() => from(this.memberService.loadMemberList())
+  loadMembers = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.listLoad),
+    withLatestFrom(this.store.select(MemberSelectors.listMembersVariables)),
+    mergeMap(([, { first, offset, orderBy, query }]) => this.memberService.getMembers({ first, offset, orderBy, query })
       .pipe(
-        mergeMap(() => this.memberService.getMembers()
-          .pipe(
-            map(memberPage => (listLoadSuccess({ ...memberPage }))),
-            catchError(() => of(listLoadError({ error: "member load failed" })))
-          )
-        )
+        map((memberPage: MemberPage) => (MemberActions.listLoadSuccess({ ...memberPage }))),
+        catchError(() => of(MemberActions.listLoadError({ error: "member load failed" })))
       )
     )
   ));
 
-  searchList = createEffect(() => this.actions.pipe(
-    ofType(listSearch),
-    mergeMap(({ query }) => from(this.memberService.loadMemberList({ query }))
-      .pipe(
-        mergeMap(() => this.memberService.getMembers()
-          .pipe(
-            map(memberPage => (listLoadSuccess({ ...memberPage }))),
-            catchError(() => of(listLoadError({ error: "member load failed" })))
-          )
-        ))
-    )
+  queryMemberList = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.listSearch, MemberActions.listSort, MemberActions.listNavigate),
+    mergeMap(() => of(MemberActions.listLoad())),
   ));
 
-  sortList = createEffect(() => this.actions.pipe(
-    ofType(listSort),
-    mergeMap(({ sortMode }) => from(this.memberService.loadMemberList({ orderBy: sortMode }))
-      .pipe(
-        mergeMap(() => this.memberService.getMembers()
-          .pipe(
-            map(memberPage => (listLoadSuccess({ ...memberPage }))),
-            catchError(() => of(listLoadError({ error: "member load failed" })))
-          )
-        ))
-    )
+  importListSuccess = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.importListRequestSuccess),
+    mergeMap(() => of(MemberActions.listLoad())),
   ));
 
-  navigateList = createEffect(() => this.actions.pipe(
-    ofType(listNavigate),
-    mergeMap(({ first, offset }) => from(this.memberService.loadMemberList({ first, offset }))
-      .pipe(
-        mergeMap(() => this.memberService.getMembers()
-          .pipe(
-            map(memberPage => (listLoadSuccess({ ...memberPage }))),
-            catchError(() => of(listLoadError({ error: "member load failed" })))
-          )
-        ))
-    )
-  ));
-
-  importMembers = createEffect(() => this.actions.pipe(
-    ofType(importListRequest),
+  importMembers = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.importListRequest),
     mergeMap(({ fileSource }) => {
+
       const formData = new FormData();
       formData.append("file", fileSource);
+
       return this.memberService.importFile(formData)
         .pipe(
-          map(response => (importListRequestSuccess({ jobId: response.jobId }))),
-          catchError(() => of(importListRequestError({ error: "member import failed" })))
+          map(response => (MemberActions.importListRequestSuccess({ jobId: response.jobId }))),
+          catchError(() => of(MemberActions.importListRequestError({ error: "member import failed" })))
         );
     })
   ));
 
-  exportCriterias = createEffect(() => this.actions.pipe(
-    ofType(getExportCriteriaList),
-    mergeMap(() => {
-      return this.memberService.exportCriterias()
-        .pipe(
-          map(response => getExportCriteriaListSuccess({ criterias: response })),
-          catchError(() => of(getExportCriteriaListError({ error: "export criterias failed" })))
-        );
-    })
+  exportCriterias = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.getExportCriteriaList),
+    mergeMap(() => this.memberService.exportCriterias()
+      .pipe(
+        map(response => MemberActions.getExportCriteriaListSuccess({ criterias: response })),
+        catchError(() => of(MemberActions.getExportCriteriaListError({ error: "export criterias failed" })))
+      )
+    )
   ));
 
-  exportMembersRequest = createEffect(() => this.actions.pipe(
-    ofType(exportListRequest),
-    mergeMap(({ criteria, variables }) => {
-      return this.memberService.requestExport(criteria, variables)
-        .pipe(
-          map(response => (exportListRequestSuccess({ jobId: response.jobId }))),
-          catchError(() => of(exportListRequestError({ error: "member export request failed" })))
-        );
-    })
+  exportMembersRequest = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.exportListRequest),
+    mergeMap(({ criteria, variables }) => this.memberService.requestExport(criteria, variables)
+      .pipe(
+        map(response => (MemberActions.exportListRequestSuccess({ jobId: response.jobId }))),
+        catchError(() => of(MemberActions.exportListRequestError({ error: "member export request failed" })))
+      )
+    )
   ));
 
-  saveMember = createEffect(() => this.actions.pipe(
-    ofType(save),
-    mergeMap(({ member }) => {
-      return this.memberService.saveMember(member)
-        .pipe(
-          map(() => (saveSuccess())),
-          catchError(() => of(saveError({ error: "member import failed" })))
-        );
-    })
+  saveMember = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.save),
+    mergeMap(({ member }) => this.memberService.saveMember(member)
+      .pipe(
+        tap(() => MemberSelectors.changeFinished.release()),
+        mergeMap(() => this.memberService.resetCache()),
+        switchMap(() => [
+          MemberActions.saveSuccess(),
+          MemberActions.listLoad()
+        ]),
+        catchError(() => of(MemberActions.saveError({ error: `Saving member '${member.firstName} ${member.lastName}' failed!` })))
+      )
+    )
   ));
 
-  removeMember = createEffect(() => this.actions.pipe(
-    ofType(remove),
-    mergeMap(({ id }) => {
-      return this.memberService.deleteMember(id)
-        .pipe(
-          map(() => (removeSuccess())),
-          catchError(() => of(removeError({ error: "member remove failed" })))
-        );
-    })
+  removeMember = createEffect(() => this.actions$.pipe(
+    ofType(MemberActions.remove),
+    mergeMap(({ member }) => this.memberService.deleteMember(member.id)
+      .pipe(
+        tap(() => MemberSelectors.changeFinished.release()),
+        mergeMap(() => this.memberService.resetCache()),
+        switchMap(() => [
+          MemberActions.removeSuccess(),
+          MemberActions.listLoad()
+        ]),
+        catchError(() => of(MemberActions.removeError({ error: `Deleting member '${member.firstName} ${member.lastName}' failed!` })))
+      )
+    )
   ));
 
   constructor(
-    private actions: Actions,
-    private memberService: MemberService
-  ) { }
+    private actions$: Actions,
+    private memberService: MemberService,
+    private store: Store) { }
 }

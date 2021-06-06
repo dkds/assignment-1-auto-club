@@ -6,18 +6,18 @@
       <div class="form-group">
         <label for="sortMode">Criteria</label>
         <select class="form-control form-control-sm" id="sortMode" required [(ngModel)]="criteria.code" name="code">
-          <option *ngFor="let criteria of criterias | async" [value]="criteria.code">{{criteria.text}}</option>
+          <option *ngFor="let criteria of criterias$ | async" [value]="criteria.code">{{criteria.text}}</option>
         </select>
       </div>
 
       <div class="form-group">
-        <label for="param">Parameter X</label>
+        <label for="param">Age</label>
         <input type="number" id="param" class="form-control form-control-sm" required [(ngModel)]="criteria.variable"
           name="variable">
       </div>
 
       <button type="submit" class="btn btn-primary btn-sm"
-        [disabled]="formSubmitting || !exportForm.form.valid">Export</button>
+        [disabled]="(exportRequestLoading$ | async) || !exportForm.form.valid">Export</button>
 
     </form>
   </div>

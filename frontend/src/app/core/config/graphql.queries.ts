@@ -103,7 +103,7 @@ export const LIST_CAR_MODEL = gql`
 
 export const CREATE_CAR_MODEL = gql`
   mutation ($carMakeId: Int!, $name: String!) {
-    createCarModel(input: {carModel: {carMakeId: $carMakeId, name: $name}}) {
+    createCarModel(carModelInput: {carMakeId: $carMakeId, name: $name}) {
       id
       name
     }
@@ -135,7 +135,7 @@ export const LIST_CAR_MAKE = gql`
 
 export const CREATE_CAR_MAKE = gql`
   mutation ($name: String!) {
-    createCarMake(input: {carMake: {name: $name}}) {
+    createCarMake(carMakeInput: {name: $name}) {
       id
       name
     }
@@ -143,7 +143,7 @@ export const CREATE_CAR_MAKE = gql`
 
 export const UPDATE_CAR_MAKE = gql`
   mutation ($id: Int!, $name: String!) {
-    updateCarModel(carModelInput: {id: $id, name: $name}) {
+    updateCarMake(carMakeInput: {id: $id, name: $name}) {
       id, 
       name
     }

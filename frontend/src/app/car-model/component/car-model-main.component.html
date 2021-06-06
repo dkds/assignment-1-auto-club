@@ -1,4 +1,7 @@
 <div class="col-12">
+
+  <app-toasts aria-live="polite" aria-atomic="true"></app-toasts>
+
   <div class="row">
     <div class="col-lg-6 col-md-8 col-sm-8">
       <div class="row">
@@ -21,7 +24,7 @@
 
                 <div class="form-group">
                   <label for="carModelName">Name</label>
-                  <input type="text" class="form-control" id="carModelName" formControlName="name"
+                  <input type="text" class="form-control form-control-sm" id="carModelName" formControlName="name"
                     [class.is-invalid]="carModelFormSubmitted && form.name.errors">
                   <div *ngIf="carModelFormSubmitted && form.name.errors" class="invalid-feedback">
                     <div *ngIf="form.name.errors.required">Name is required</div>
@@ -30,17 +33,19 @@
 
                 <div class="form-group">
                   <label for="carModelName">Car Make</label>
-                  <select class="form-control" id="carModelName" formControlName="carMakeId"
+                  <select class="form-control form-control-sm" id="carModelName" formControlName="carMakeId"
                     [class.is-invalid]="carModelFormSubmitted && form.carMakeId.errors">
                     <option value="" disabled selected>Choose Car Make</option>
-                    <option *ngFor="let carMake of carMakeList | async" [ngValue]="carMake.id">{{carMake.name}}</option>
+                    <option *ngFor="let carMake of carMakeList$ | async" [ngValue]="carMake.id">{{carMake.name}}
+                    </option>
                   </select>
                   <div *ngIf="carModelFormSubmitted && form.carMakeId.errors" class="invalid-feedback">
                     <div *ngIf="form.carMakeId.errors.required">Car Make is required</div>
                   </div>
                 </div>
 
-                <button type="submit" class="btn btn-primary" [disabled]="carModelFormSubmitting">Save</button>
+                <button type="submit" class="btn btn-primary btn-sm"
+                  [disabled]="carModelSaveLoading$ | async">Save</button>
               </form>
             </div>
           </div>
@@ -51,21 +56,28 @@
       <div class="row item-container">
         <div class="col-12">
           <ul class="list-group">
-            <li *ngFor="let carModel of carModelList | async" class="list-group-item list-group-item-action"
+            <li *ngFor="let carModel of carModelList$ | async" class="list-group-item list-group-item-action"
               aria-current="true">
               <div class="d-flex w-100 justify-content-between">
-                <h6 class="mb-1">{{carModel?.name}}</h6>
+                <p class="mb-1">{{carModel?.carMake?.name}}</p>
               </div>
               <div>
                 <div class="float-left">
-                  <p class="mb-1">{{carModel?.carMake?.name}}</p>
+                  <h6 class="mb-1">{{carModel?.name}}</h6>
                 </div>
                 <div class="float-right">
                   <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-sm btn-secondary btn-edit" [disabled]="carModelFormSubmitting"
-                      (click)="onItemEditClick($event, carModel)">Edit</button>
-                    <button type="button" class="btn btn-sm btn-secondary btn-delete" [disabled]="carModelFormSubmitting"
-                      (click)="onItemDeleteClick($event, carModel)">Delete</button>
+
+                    <button type="button" class="btn btn-sm btn-secondary btn-edit"
+                      [disabled]="carModelSaveLoading$ | async" (click)="onItemEditClick($event, carModel)">
+                      Edit
+                    </button>
+
+                    <button type="button" class="btn btn-sm btn-secondary btn-delete"
+                      [disabled]="carModelRemoveLoading$ | async" (click)="onItemDeleteClick($event, carModel)">
+                      Delete
+                    </button>
+
                   </div>
                 </div>
               </div>

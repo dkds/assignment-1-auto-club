@@ -1,19 +1,19 @@
 import { CarModel } from "../../model/car-model.model";
 
 export interface CarModelListState {
-    carModels: CarModel[];
-    error: string | null;
-    loading: boolean;
+  carModels: CarModel[];
+  requestState: 'idle' | 'loading' | 'succeeded' | 'failed';
+  requestError: string | null;
 }
 
 export interface CarModelRemoveState {
-    id: number | null,
-    error: string | null,
-    loading: boolean,
+  id: number | null,
+  requestState: 'idle' | 'loading' | 'succeeded' | 'failed';
+  requestError: string | null;
 }
 
 export interface CarModelSaveState {
-    carModel: CarModel | null,
-    error: string | null,
-    loading: boolean,
+  carModel: CarModel | null,
+  requestState: 'idle' | 'loading' | 'succeeded' | 'failed';
+  requestError: string | null;
 }

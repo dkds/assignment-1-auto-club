@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { NGXLogger } from "ngx-logger";
-import { Apollo, QueryRef } from 'apollo-angular';
-import { BehaviorSubject, EMPTY, Observable, Subject, Subscription, throwError } from 'rxjs';
+import { Apollo } from 'apollo-angular';
+import { from, Observable, of, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MemberPage } from '../model/member-page.model';
 import { Member } from '../model/member.model';
-import { LIST_MEMBERS, CREATE_MEMBER, UPDATE_MEMBER, DELETE_MEMBER } from './graphql.schema';
+import { LIST_MEMBERS, CREATE_MEMBER, UPDATE_MEMBER, DELETE_MEMBER } from '../config/graphql.queries';
 import { environment } from '../../../environments/environment';
 
 @Injectable({
@@ -14,37 +14,21 @@ import { environment } from '../../../environments/environment';
 })
 export class MemberService {
 
-  private memberSubject: Subject<MemberPage> = new BehaviorSubject(new MemberPage([], 0));
-  private listQuery: QueryRef<any, { first: number, offset: number, query: string, orderBy: string }> =
-    this.apollo.watchQuery({
-      query: LIST_MEMBERS, variables: { first: 10, offset: 0, query: '*', orderBy: "NATURAL" },
-    });
-  private subscription?: Subscription;
-
   constructor(
     private logger: NGXLogger,
     private apollo: Apollo,
     private httpClient: HttpClient) {
   }
 
-  loadMemberList(variables?: any) {
-    if (this.subscription) {
-      return this.listQuery.refetch(variables);
-    } else {
-      this.subscription = this.listQuery.valueChanges.subscribe((result: any) => {
-        this.logger.debug("initData", result);
-
-        const total = result?.data?.members?.totalCount;
-        const members = result?.data?.members?.nodes;
-
-        this.memberSubject.next(new MemberPage(members, total));
-      });
-      return Promise.resolve();
-    }
-  }
-
-  getMembers(): Observable<MemberPage> {
-    return this.memberSubject.asObservable();
+  getMembers(variables?: { first?: number, offset?: number, query?: string, orderBy?: string }): Observable<MemberPage> {
+    this.logger.debug("getting members", variables);
+    return this.apollo.query({
+      query: LIST_MEMBERS,
+      variables
+    }).pipe(
+      map((result: any) => result?.data?.members),
+      map(({ nodes, totalCount }) => new MemberPage(nodes, totalCount)),
+    );
   }
 
   saveMember(member: Member) {
@@ -59,10 +43,11 @@ export class MemberService {
     return this.apollo.mutate({
       mutation: DELETE_MEMBER,
       variables: { id }
-    }).pipe(map((result: any) => {
-      this.logger.debug("deleteMember", result);
-      return this.responseHandler(result);
-    }));
+    }).pipe(
+      map((result: any) => {
+        this.logger.debug("deleteMember", result);
+        return this.responseHandler(result);
+      }));
   }
 
   exportCriterias(): Observable<any> {
@@ -77,30 +62,36 @@ export class MemberService {
     return this.httpClient.post(`${environment.apiHost}/import`, formData);
   }
 
+  resetCache() {
+    return from(this.apollo.client.resetStore());
+  }
+
   private createMember(member: Member) {
     return this.apollo.mutate({
       mutation: CREATE_MEMBER,
       variables: { ...member, carModelId: member.carModel?.id }
-    }).pipe(map((result: any) => {
-      this.logger.debug("createMember", result);
-      return this.responseHandler(result);
-    }));
+    }).pipe(
+      map((result: any) => {
+        this.logger.debug("createMember", result);
+        return this.responseHandler(result);
+      }));
   }
 
   private updateMember(member: Member) {
     return this.apollo.mutate({
       mutation: UPDATE_MEMBER,
       variables: { ...member, carModelId: member.carModel?.id }
-    }).pipe(map((result: any) => {
-      this.logger.debug("updateMember", result);
-      return this.responseHandler(result);
-    }));
+    }).pipe(
+      map((result: any) => {
+        this.logger.debug("updateMember", result);
+        return this.responseHandler(result);
+      }));
   }
 
   private responseHandler(result: any) {
     if (result.error) {
       return throwError(result.error);
     }
-    return EMPTY;
+    return of(result?.data);
   }
 }

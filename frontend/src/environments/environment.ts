@@ -5,6 +5,7 @@
 export const environment = {
   production: false,
   apiHost: 'http://localhost:3000',
+  fileDownloadLink: 'http://localhost:3000/export/download',
   socketcluster: {
     hostname: 'localhost',
     port: 8000,

@@ -1,195 +1,215 @@
 import { on } from '@ngrx/store';
 import { createImmerReducer } from 'ngrx-immer/store';
-import { listSort, listNavigate, listLoadSuccess, listLoadError, remove, removeSuccess, removeError, importListRequest, importListRequestSuccess, importListRequestError, save, saveError, saveSuccess, exportListRequest, exportListRequestError, exportListRequestSuccess, getExportCriteriaListSuccess, getExportCriteriaListError, listSearch, importListRequestCompleted, importListRequestListenerStarted, importListRequestListenerEnded, exportListRequestCompleted, exportListRequestListenerEnded, exportListRequestListenerStarted } from './member.actions';
+import { MemberActions } from './member.actions';
 import { MemberExportState, MemberImportState, MemberListState, MemberRemoveState, MemberSaveState } from './member.state';
 
-export const initialMemberListState: MemberListState = {
-    first: 10,
-    offset: 0,
-    orderBy: "NATURAL",
-    searchQuery: '',
-    totalCount: 0,
-    members: [],
-    error: null,
-    loading: false
+const initialMemberListState: MemberListState = {
+  pageSize: 10,
+  currentPage: 1,
+  sortMode: "NATURAL",
+  searchQuery: '*',
+  totalCount: 0,
+  members: [],
+  requestState: 'idle',
+  requestError: null,
 };
 
-export const initialMemberImportState: MemberImportState = {
-    jobs: [],
-    fileSource: null,
-    error: null,
-    loading: false,
+const initialMemberImportState: MemberImportState = {
+  jobs: [],
+  fileSource: null,
+  requestState: 'idle',
+  requestError: null,
 };
 
-export const initialMemberExportState: MemberExportState = {
-    jobs: [],
-    criterias: [],
-    criteria: null,
-    variables: null,
-    error: null,
-    loading: false,
+const initialMemberExportState: MemberExportState = {
+  jobs: [],
+  criterias: [],
+  criteria: null,
+  variables: null,
+  requestState: 'idle',
+  requestError: null,
+}
+
+const initialMemberRemoveState: MemberRemoveState = {
+  id: null,
+  requestState: 'idle',
+  requestError: null,
 };
 
-export const initialMemberRemoveState: MemberRemoveState = {
-    id: null,
-    error: null,
-    loading: false,
-};
-
-export const initialMemberSaveState: MemberSaveState = {
-    member: null,
-    error: null,
-    loading: false,
+const initialMemberSaveState: MemberSaveState = {
+  member: null,
+  requestState: 'idle',
+  requestError: null,
 };
 
 export const memberListReducer = createImmerReducer(
-    initialMemberListState,
-    // list
-    on(listSearch, (state, { query }) => {
-        state.searchQuery = `${query}`;
-        state.loading = true;
-        return state;
-    }),
-    on(listSort, (state, { sortMode }) => {
-        state.orderBy = `${sortMode}`;
-        state.loading = true;
-        return state;
-    }),
-    on(listNavigate, (state, { offset, first }) => {
-        state.first = first;
-        state.offset = offset;
-        state.loading = true;
-        return state;
-    }),
-    on(listLoadSuccess, (state, { members, totalCount }) => {
-        state.members = members;
-        state.totalCount = totalCount;
-        state.loading = false;
-        return state;
-    }),
-    on(listLoadError, (state, { error }) => {
-        state.error = error;
-        state.loading = false;
-        return state;
-    }),
+  initialMemberListState,
+  // list
+  on(MemberActions.listSearch, (state, { query }) => {
+    state.searchQuery = `${query}`;
+    state.currentPage = initialMemberListState.currentPage;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.listSort, (state, { sortMode }) => {
+    state.sortMode = `${sortMode}`;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.listNavigate, (state, { currentPage }) => {
+    state.currentPage = currentPage;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.listLoadSuccess, (state, { members, totalCount }) => {
+    state.members = members;
+    state.totalCount = totalCount;
+    state.requestState = 'succeeded';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.listLoadError, (state, { error }) => {
+    state.requestState = 'failed';
+    state.requestError = error;
+    return state;
+  }),
 );
 
 export const memberImportReducer = createImmerReducer(
-    initialMemberImportState,
-    on(importListRequest, (state, { fileSource }) => {
-        state.fileSource = fileSource;
-        state.loading = true;
-        return state;
-    }),
-    on(importListRequestSuccess, (state, { jobId }) => {
-        state.jobs = [...state.jobs, { jobId, listening: false }];
-        state.fileSource = null;
-        state.loading = false;
-        return state;
-    }),
-    on(importListRequestError, (state, { error }) => {
-        state.error = error;
-        state.loading = false;
-        return state;
-    }),
-    on(importListRequestListenerStarted, (state, { jobId }) => {
-        state.jobs = [...state.jobs.filter(job => job.jobId != jobId), { jobId, listening: true }];
-        return state;
-    }),
-    on(importListRequestListenerEnded, (state) => {
-        state.jobs = state.jobs.map(job => { job.listening = false; return job; });
-        return state;
-    }),
-    on(importListRequestCompleted, (state, { jobId }) => {
-        state.jobs = state.jobs.filter(job => job.jobId != jobId);
-        return state;
-    }),
+  initialMemberImportState,
+  on(MemberActions.importListRequest, (state, { fileSource }) => {
+    state.fileSource = fileSource;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.importListRequestSuccess, (state, { jobId }) => {
+    state.jobs = [...state.jobs, { jobId, listening: false }];
+    state.fileSource = null;
+    state.requestState = 'succeeded';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.importListRequestError, (state, { error }) => {
+    state.requestState = 'failed';
+    state.requestError = error;
+    return state;
+  }),
+  on(MemberActions.importListRequestListenerStarted, (state, { jobId }) => {
+    state.jobs = [...state.jobs.filter(job => job.jobId != jobId), { jobId, listening: true }];
+    return state;
+  }),
+  on(MemberActions.importListRequestListenerEnded, (state) => {
+    state.jobs = state.jobs.map(job => { job.listening = false; return job; });
+    return state;
+  }),
+  on(MemberActions.importListRequestCompleted, (state, { jobId }) => {
+    state.jobs = state.jobs.filter(job => job.jobId != jobId);
+    return state;
+  }),
 );
 
 export const memberExportReducer = createImmerReducer(
-    initialMemberExportState,
-    on(exportListRequest, (state, { criteria, variables }) => {
-        state.criteria = criteria;
-        state.variables = variables;
-        state.loading = true;
-        return state;
-    }),
-    on(exportListRequestSuccess, (state, { jobId }) => {
-        state.jobs = [...state.jobs, { jobId, listening: false }];
-        state.criteria = null;
-        state.variables = null;
-        state.loading = false;
-        return state;
-    }),
-    on(exportListRequestError, (state, { error }) => {
-        state.error = error;
-        state.criteria = null;
-        state.variables = null;
-        state.loading = false;
-        return state;
-    }),
-    on(exportListRequestListenerStarted, (state, { jobId }) => {
-        state.jobs = [...state.jobs.filter(job => job.jobId != jobId), { jobId, listening: true }];
-        return state;
-    }),
-    on(exportListRequestListenerEnded, (state) => {
-        state.jobs = state.jobs.map(job => { job.listening = false; return job; });
-        return state;
-    }),
-    on(exportListRequestCompleted, (state, { jobId }) => {
-        state.jobs = state.jobs.filter(job => job.jobId != jobId);
-        state.criteria = null;
-        state.variables = null;
-        state.loading = false;
-        return state;
-    }),
-    on(getExportCriteriaListSuccess, (state, { criterias }) => {
-        state.criterias = criterias;
-        state.loading = false;
-        return state;
-    }),
-    on(getExportCriteriaListError, (state, { error }) => {
-        state.error = error;
-        state.loading = false;
-        return state;
-    }),
+  initialMemberExportState,
+  on(MemberActions.exportListRequest, (state, { criteria, variables }) => {
+    state.criteria = criteria;
+    state.variables = variables;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.exportListRequestSuccess, (state, { jobId }) => {
+    state.jobs = [...state.jobs, { jobId, listening: false }];
+    state.criteria = null;
+    state.variables = null;
+    state.requestState = 'succeeded';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.exportListRequestError, (state, { error }) => {
+    state.criteria = null;
+    state.variables = null;
+    state.requestState = 'failed';
+    state.requestError = error;
+    return state;
+  }),
+  on(MemberActions.exportListRequestListenerStarted, (state, { jobId }) => {
+    state.jobs = [...state.jobs.filter(job => job.jobId != jobId), { jobId, listening: true }];
+    return state;
+  }),
+  on(MemberActions.exportListRequestListenerEnded, (state) => {
+    state.jobs = state.jobs.map(job => { job.listening = false; return job; });
+    return state;
+  }),
+  on(MemberActions.exportListRequestCompleted, (state, { jobId }) => {
+    state.jobs = state.jobs.filter(job => job.jobId != jobId);
+    state.criteria = null;
+    state.variables = null;
+    state.requestState = 'succeeded';
+    return state;
+  }),
+  on(MemberActions.getExportCriteriaListSuccess, (state, { criterias }) => {
+    state.criterias = criterias;
+    state.requestState = 'succeeded';
+    return state;
+  }),
+  on(MemberActions.getExportCriteriaListError, (state, { error }) => {
+    state.requestState = 'failed';
+    state.requestError = error;
+    return state;
+  }),
 );
 
 export const memberSaveReducer = createImmerReducer(
-    initialMemberSaveState,
-    on(save, (state, { member }) => {
-        state.member = member;
-        state.loading = true;
-        return state;
-    }),
-    on(saveSuccess, (state) => {
-        state.member = null;
-        state.loading = false;
-        return state;
-    }),
-    on(saveError, (state, { error }) => {
-        state.member = null;
-        state.error = error;
-        state.loading = false;
-        return state;
-    }),
+  initialMemberSaveState,
+  on(MemberActions.save, (state, { member }) => {
+    state.member = member;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.saveSuccess, (state) => {
+    state.member = null;
+    state.requestState = 'succeeded';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.saveError, (state, { error }) => {
+    state.member = null;
+    state.requestState = 'failed';
+    state.requestError = error;
+    return state;
+  }),
 );
 
 export const memberRemoveReducer = createImmerReducer(
-    initialMemberRemoveState,
-    on(remove, (state, { id }) => {
-        state.id = id;
-        state.loading = true;
-        return state;
-    }),
-    on(removeSuccess, (state) => {
-        state.id = null;
-        state.loading = false;
-        return state;
-    }),
-    on(removeError, (state, { error }) => {
-        state.error = error;
-        state.loading = false;
-        return state;
-    }),
+  initialMemberRemoveState,
+  on(MemberActions.remove, (state, { member }) => {
+    state.id = member.id;
+    state.requestState = 'loading';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.removeSuccess, (state) => {
+    state.id = null;
+    state.requestState = 'succeeded';
+    state.requestError = null;
+    return state;
+  }),
+  on(MemberActions.removeError, (state, { error }) => {
+    state.requestState = 'failed';
+    state.requestError = error;
+    return state;
+  }),
 );
+
+export const memberReducers = {
+  list: memberListReducer,
+  save: memberSaveReducer,
+  remove: memberRemoveReducer,
+  import: memberImportReducer,
+  export: memberExportReducer,
+}

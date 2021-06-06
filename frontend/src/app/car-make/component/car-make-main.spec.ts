@@ -2,12 +2,15 @@ import { ComponentFixture, TestBed, waitForAsync } from "@angular/core/testing";
 import { ReactiveFormsModule } from "@angular/forms";
 import { By } from "@angular/platform-browser";
 import { NgbCollapseModule } from "@ng-bootstrap/ng-bootstrap";
+import { EffectsRootModule } from "@ngrx/effects";
 import { MemoizedSelector, DefaultProjectorFn } from "@ngrx/store";
 import { MockStore, provideMockStore } from '@ngrx/store/testing';
 import { NGXLogger } from "ngx-logger";
-import { CarMake } from "src/app/core/model/car-make.model";
-import { remove, save } from "src/app/core/state/car-make/car-make.actions";
-import { listCarMakes, removeLoading, saveLoading } from "src/app/core/state/car-make/car-make.selectors";
+import { CarMake } from "../../core/model/car-make.model";
+import { CarMakeActions } from "../../core/state/car-make/car-make.actions";
+import { carMakeInitialState } from "../../core/state/car-make/car-make.reducers";
+import { CarMakeSelectors } from "../../core/state/car-make/car-make.selectors";
+import { SharedModule } from "../../shared/shared.module";
 import { CarMakeComponent } from "./car-make-main.component";
 
 describe("CarMakeComponent", () => {
@@ -23,13 +26,18 @@ describe("CarMakeComponent", () => {
 
   beforeEach(waitForAsync(() => {
     const logMock = jasmine.createSpyObj('NGXLogger', ['debug']);
+    const effects = jasmine.createSpy('EffectsRootModule');
     TestBed.configureTestingModule({
       providers: [
-        provideMockStore(),
+        provideMockStore({
+          initialState: { carMake: carMakeInitialState }
+        }),
         { provide: NGXLogger, useValue: logMock },
+        { provide: EffectsRootModule, useValue: effects },
       ],
       declarations: [CarMakeComponent],
       imports: [
+        SharedModule,
         ReactiveFormsModule,
         NgbCollapseModule,
       ],
@@ -38,24 +46,18 @@ describe("CarMakeComponent", () => {
 
   beforeEach(() => {
     store = TestBed.inject(MockStore);
-    listSelector = store.overrideSelector(
-      listCarMakes,
-      initialCarMakeList
-    );
-    store.overrideSelector(
-      saveLoading,
-      false
-    );
-    store.overrideSelector(
-      removeLoading,
-      false
-    );
+
+    listSelector = store.overrideSelector(CarMakeSelectors.listCarMakes, initialCarMakeList);
+    store.overrideSelector(CarMakeSelectors.saveLoading, false);
+    store.overrideSelector(CarMakeSelectors.removeLoading, false);
+    store.overrideSelector(CarMakeSelectors.changeFinished, false);
+    store.overrideSelector(CarMakeSelectors.changeError, false);
+
     fixture = TestBed.createComponent(CarMakeComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    spyOn(store, 'dispatch').and.callFake(() => {
-      console.log("dispached");
-    });
+
+    spyOn(store, 'dispatch').and.callFake(() => console.log("dispached"));
     spyOn(window, "confirm").and.returnValue(true);
   });
 
@@ -88,7 +90,7 @@ describe("CarMakeComponent", () => {
 
     component.onCarMakeFormSubmit();
     expect(store.dispatch).toHaveBeenCalledWith(
-      save({ carMake: form.value })
+      CarMakeActions.save({ carMake: form.value })
     );
   });
 
@@ -139,7 +141,7 @@ describe("CarMakeComponent", () => {
 
     item.query(By.css('button.btn.btn-delete')).nativeElement.click();
     expect(store.dispatch).toHaveBeenCalledWith(
-      remove({ id: 1 })
+      CarMakeActions.remove({ carMake: { ...initialCarMakeList[0] } })
     );
   });
 });

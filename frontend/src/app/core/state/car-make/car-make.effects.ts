@@ -1,63 +1,59 @@
 import { Injectable } from "@angular/core";
 import { createEffect, ofType, Actions } from "@ngrx/effects";
 import { of } from "rxjs";
-import { mergeMap, map, catchError } from "rxjs/operators";
+import { mergeMap, map, catchError, switchMap, tap } from "rxjs/operators";
+import { CarMake } from "../../model/car-make.model";
 import { CarMakeService } from "../../service/car-make.service";
-import { listLoad, listLoadError, listLoadSuccess, listReload, remove, save, saveError, saveSuccess } from "./car-make.actions";
+import { CarMakeActions } from "./car-make.actions";
+import { CarMakeSelectors } from "./car-make.selectors";
 
 @Injectable()
 export class CarMakeEffects {
 
-  loadCarMakes = createEffect(() => this.actions.pipe(
-    ofType(listLoad),
-    mergeMap(() => {
-      this.carMakeService.loadCarMakes();
-      return this.carMakeService.getCarMakes()
-        .pipe(
-          map(carMakes => (listLoadSuccess({ carMakes }))),
-          catchError(() => of(listLoadError({ error: "car model load failed" })))
-        );
-    })
-  ));
-
-  reloadCarMakes = createEffect(() => this.actions.pipe(
-    ofType(listReload),
-    mergeMap(() => of(this.carMakeService.refresh())
+  loadCarMakes = createEffect(() => this.actions$.pipe(
+    ofType(CarMakeActions.listLoad),
+    mergeMap(() => this.carMakeService.getCarMakes()
       .pipe(
-        mergeMap(() => this.carMakeService.getCarMakes()
-          .pipe(
-            map(carMakes => (listLoadSuccess({ carMakes }))),
-            catchError(() => of(listLoadError({ error: "car model load failed" })))
-          )
-        )
+        map((carMakes: CarMake[]) => (CarMakeActions.listLoadSuccess({ carMakes }))),
+        catchError(() => of(CarMakeActions.listLoadError({ error: "Loading car makes failed" })))
       )
     )
   ));
 
-  deleteCarMake = createEffect(() => this.actions.pipe(
-    ofType(remove),
-    mergeMap(({ id }) => {
-      return this.carMakeService.deleteCarMake(id)
+  saveCarMake = createEffect(() => this.actions$.pipe(
+    ofType(CarMakeActions.save),
+    mergeMap(({ carMake }) => {
+      return this.carMakeService.saveCarMake(carMake)
         .pipe(
-          map(() => (saveSuccess())),
-          catchError(() => of(saveError({ error: "car model delete failed" })))
+          tap(() => CarMakeSelectors.changeFinished.release()),
+          mergeMap(() => this.carMakeService.resetCache()),
+          switchMap(() => [
+            CarMakeActions.saveSuccess(),
+            CarMakeActions.listLoad()
+          ]),
+          catchError(() => of(CarMakeActions.saveError({ error: `Saving car make '${carMake.name}' failed!` })))
         );
     })
   ));
 
-  saveCarMake = createEffect(() => this.actions.pipe(
-    ofType(save),
+  deleteCarMake = createEffect(() => this.actions$.pipe(
+    ofType(CarMakeActions.remove),
     mergeMap(({ carMake }) => {
-      return this.carMakeService.saveCarMake(carMake)
+      return this.carMakeService.deleteCarMake(carMake.id)
         .pipe(
-          map(() => (saveSuccess())),
-          catchError(() => of(saveError({ error: "car model save failed" })))
+          tap(() => CarMakeSelectors.changeFinished.release()),
+          mergeMap(() => this.carMakeService.resetCache()),
+          switchMap(() => [
+            CarMakeActions.removeSuccess(),
+            CarMakeActions.listLoad()
+          ]),
+          catchError(() => of(CarMakeActions.removeError({ error: `Deleting car make '${carMake.name}' failed!` })))
         );
     })
   ));
 
   constructor(
-    private actions: Actions,
+    private actions$: Actions,
     private carMakeService: CarMakeService
   ) { }
 }
