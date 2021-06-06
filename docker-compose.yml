@@ -48,6 +48,25 @@ services:
     ports:
       - 8000:8000
 
+  bulk-process-service:
+    image: bulk-process-service
+    depends_on:
+      - postgraphile
+      - minio
+      - backend-service
+    build:
+      context: ./bulk-process-service
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      BACKEND_HOST: backend-service
+      BACKEND_PORT: 3000
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESSKEY: minio
+      MINIO_SECRETKEY: minio123
+      MINIO_BUCKET: test
+
   backend-service:
     image: backend-service
     ports:
@@ -70,24 +89,19 @@ services:
       MINIO_SECRETKEY: minio123
       MINIO_BUCKET: test
 
-  bulk-process-service:
-    image: bulk-process-service
+  frontend-service:
+    image: frontend-service
+    ports:
+      - 4200:4200
     depends_on:
-      - postgraphile
-      - minio
       - backend-service
     build:
-      context: ./bulk-process-service
+      context: ./frontend
     environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      BACKEND_HOST: backend-service
+      BACKEND_HOST: localhost
       BACKEND_PORT: 3000
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_ACCESSKEY: minio
-      MINIO_SECRETKEY: minio123
-      MINIO_BUCKET: test
+      SOCKETCLUSTER_HOST: localhost
+      SOCKETCLUSTER_PORT: 8000
 
 volumes:
   postgres:
