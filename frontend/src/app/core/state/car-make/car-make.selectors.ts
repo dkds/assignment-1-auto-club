@@ -3,7 +3,7 @@ import { CarMakeListState, CarMakeRemoveState, CarMakeSaveState } from './car-ma
 
 export class CarMakeSelectors {
 
-  private static selectCarMake = createFeatureSelector<CarMakeListState>('carMake');
+  private static selectCarMake = createFeatureSelector('carMake');
 
   private static selectCarMakeList = createSelector(CarMakeSelectors.selectCarMake, (state: any) => state['list']);
   private static selectCarMakeSave = createSelector(CarMakeSelectors.selectCarMake, (state: any) => state['save']);
